@@ -2,6 +2,9 @@ package ru.authorization.auth.utils;
 
 public class StaticResources {
 
+    public static final long JWT_EXPIRATION_MS = 1000 * 60 * 60 * 24;
+    public static final String JWT_SECRET = "yourSecretKeyShouldBeLongerAndMoreComplexdwfFV we f34 F F#ER#WDDWr3tr ";
+
     public static final String EMAIL_IS_ALREADY_IN_USE_EXCEPTION_MESSAGE = "Email is already in use";
     public static final String USER_NOT_FOUND_EXCEPTION_MESSAGE = "User not found";
     public static final String CANNOT_CREATE_NEW_USER_EXCEPTION_MESSAGE = "error on creating new user";

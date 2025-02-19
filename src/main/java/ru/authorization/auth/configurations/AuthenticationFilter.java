@@ -12,24 +12,27 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import ru.authorization.auth.components.CustomAuthenticationManager;
 import ru.authorization.auth.components.JwtTokenProvider;
 import ru.authorization.auth.models.UserModel;
+import ru.authorization.auth.repositories.TokenRepository;
 import ru.authorization.auth.repositories.UserRepository;
 import ru.authorization.auth.services.TokenService;
 import ru.authorization.auth.utils.StaticResources;
 
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
+    private final TokenService tokenService;
     private final UserRepository userRepository;
+    private final TokenRepository tokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomAuthenticationManager authenticationManager;
-    private final TokenService tokenService;
 
-    public AuthenticationFilter(CustomAuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
+    public AuthenticationFilter(CustomAuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, UserRepository userRepository, TokenRepository tokenRepository) {
 
         this.userRepository = userRepository;
+        this.tokenRepository = tokenRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
+        this.tokenService = new TokenService(tokenRepository, jwtTokenProvider, userRepository);
 
-        tokenService = new TokenService(userRepository);
         setAuthenticationManager(authenticationManager);
         setFilterProcessesUrl("/login");
     }
@@ -87,7 +90,9 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                                          Authentication authResult) throws IOException, ServletException {
 
         UserModel user = (UserModel) authResult.getPrincipal();
-        String token = jwtTokenProvider.createToken(user);
+        String token = jwtTokenProvider.getToken(user);
+
+        var tokenSaving = tokenService.saveToken(token, user.getId(), user.getEmail());
 
         response.addHeader("Authorization", "Bearer " + token);
         response.getWriter().write("Authentication successful. Token: " + token);

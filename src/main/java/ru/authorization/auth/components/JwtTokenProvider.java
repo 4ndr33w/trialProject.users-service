@@ -2,27 +2,32 @@ package ru.authorization.auth.components;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Component;
 
 import ru.authorization.auth.models.UserModel;
+import ru.authorization.auth.utils.StaticResources;
 
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
 
 @Component
 public class JwtTokenProvider {
 
-    private final String JWT_SECRET = "yourSecretKeyShouldBeLongerAndMoreComplex";
-    private final long JWT_EXPIRATION_MS = 1000 * 60 * 60 * 24; // 24 hours in milliseconds
-
-    public String createToken(UserModel userDetails) {
+    public String getToken(UserModel userDetails) {
         return Jwts.builder()
                 .setSubject(userDetails.getEmail())
                 .claim("roles", userDetails.getUserStatus().toString())
+                .setId(String.valueOf(userDetails.getId()))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))
-                .signWith(SignatureAlgorithm.HS256, JWT_SECRET.getBytes())
+                .setExpiration(new Date(System.currentTimeMillis() + StaticResources.JWT_EXPIRATION_MS))
+                .signWith(
+                        SignatureAlgorithm.HS256,
+                        StaticResources.JWT_SECRET.getBytes(StandardCharsets.UTF_8)
+                )
                 .compact();
     }
 
@@ -31,20 +36,9 @@ public class JwtTokenProvider {
     }
 
     public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = getAllClaimsFromToken(token);
+
+        final Claims claims = validateAndExtractClaims(token);
         return claimsResolver.apply(claims);
-    }
-
-    private Claims getAllClaimsFromToken(String token) {
-
-        try {
-            return Jwts.parser().setSigningKey(JWT_SECRET).build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-        }
-        catch (Exception e) {
-            throw new IllegalArgumentException("Invalid JWT signature");
-        }
     }
 
     public boolean isTokenExpired(String token) {
@@ -59,5 +53,20 @@ public class JwtTokenProvider {
     public boolean validateToken(String token, UserModel userDetails) {
         final String username = getUsernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+    public Claims validateAndExtractClaims(String token) {
+
+        Key key = Keys.hmacShaKeyFor(StaticResources.JWT_SECRET.getBytes(StandardCharsets.UTF_8));
+
+        try {
+            return Jwts.parser()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid JWT signature");
+        }
     }
 }

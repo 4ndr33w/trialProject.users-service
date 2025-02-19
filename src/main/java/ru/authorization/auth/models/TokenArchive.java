@@ -5,11 +5,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
+
 @Setter
 @Getter
 @Entity
 @NoArgsConstructor
-@Table(name = "tokenvault", schema = "astonauth")
+@Table(name = "tokenvault")
 public class TokenArchive {
 
     @Id
@@ -24,10 +26,10 @@ public class TokenArchive {
     private long userid;
 
     @Column(name = "created")
-    private long created;
+    private Date created;
 
     @Column(name = "expired")
-    private long expired;
+    private Date expired;
 
     @Column(name = "username")
     private String username;

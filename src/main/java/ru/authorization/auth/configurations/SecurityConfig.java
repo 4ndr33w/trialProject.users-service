@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import ru.authorization.auth.components.CustomAuthenticationManager;
 import ru.authorization.auth.components.JwtTokenProvider;
 import ru.authorization.auth.models.enums.UserStatus;
+import ru.authorization.auth.repositories.TokenRepository;
 import ru.authorization.auth.repositories.UserRepository;
 import ru.authorization.auth.services.CustomUserDetailsService;
 
@@ -26,8 +27,8 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     private CustomUserDetailsService customUserDetailsService;
+    private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
-    //private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
     @Autowired
     private CustomAuthenticationManager customAuthenticationManager;
@@ -41,7 +42,6 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        //.requestMatchers(HttpMethod.POST,"/users/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/**").permitAll()
                         //.requestMatchers(HttpMethod.GET,"/users/**").permitAll()
@@ -60,22 +60,12 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .httpBasic(withDefaults())
-                .addFilter(new AuthenticationFilter(customAuthenticationManager, new JwtTokenProvider(), userRepository))
+                .addFilter(new AuthenticationFilter(customAuthenticationManager, new JwtTokenProvider(), userRepository, tokenRepository))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
-/*
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }*/
-/*
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
-    }*/
 
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(customUserDetailsService);
