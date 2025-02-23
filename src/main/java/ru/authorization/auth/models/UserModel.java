@@ -4,17 +4,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Collection;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.RequiredArgsConstructor;
-
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.*;
+import lombok.*;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,7 +16,9 @@ import ru.authorization.auth.models.Dtos.UserDto;
 @Getter
 @Setter
 @Entity
-@RequiredArgsConstructor
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "users", schema = "astonauth")
 public class UserModel implements UserDetails {
     @Id
@@ -61,7 +54,7 @@ public class UserModel implements UserDetails {
     private Date lastLoginDate = new Date();
 
     @Column(name = "userstatus")
-    @Enumerated(jakarta.persistence.EnumType.ORDINAL)
+    @Enumerated(EnumType.ORDINAL)
     private UserStatus userStatus = UserStatus.USER;
 
     @Column(name = "username", columnDefinition = "text")
@@ -78,10 +71,5 @@ public class UserModel implements UserDetails {
     @Override
     public String getUsername() {
         return email;
-    }
-
-    public UserDto toDto() {
-        return new UserDto(this);
-
     }
 }

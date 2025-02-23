@@ -5,17 +5,19 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import ru.authorization.auth.components.CustomAuthenticationManager;
-import ru.authorization.auth.components.JwtTokenProvider;
+
 import ru.authorization.auth.models.UserModel;
-import ru.authorization.auth.repositories.TokenRepository;
-import ru.authorization.auth.repositories.UserRepository;
 import ru.authorization.auth.services.TokenService;
 import ru.authorization.auth.utils.StaticResources;
+import ru.authorization.auth.components.JwtTokenProvider;
+import ru.authorization.auth.repositories.UserRepository;
+import ru.authorization.auth.repositories.TokenRepository;
+import ru.authorization.auth.components.CustomAuthenticationManager;
 
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
@@ -34,9 +36,17 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         this.tokenService = new TokenService(tokenRepository, jwtTokenProvider, userRepository);
 
         setAuthenticationManager(authenticationManager);
+
+        //точка входа, с которой перехватываются запросы на авторизацию
+        //вызывается спрингом без нашего участия / желания / согласия
+        //сразу при подключении springframework.security
+        //по этому аннотацию @RequiredArgConstructor не применяю
         setFilterProcessesUrl("/login");
     }
 
+    // Если не переопределить этот метод,
+    // то будет вызываться метод attemptAuthentication() из класса UsernamePasswordAuthenticationFilter
+    // который нам запорет всю аутенфикацию
     @Override
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res) throws AuthenticationException {
         String authorizationHeader = req.getHeader("Authorization");
@@ -83,6 +93,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         }
     }
 
+    //Из названия всё ясно
+    //Прописываем свою логику при успешной аутенфикации
     @Override
     public void successfulAuthentication(HttpServletRequest request,
                                          HttpServletResponse response,

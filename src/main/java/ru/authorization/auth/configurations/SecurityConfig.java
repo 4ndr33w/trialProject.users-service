@@ -42,28 +42,43 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        //Здесь задаются условия фильтрации Ендпойнтов
+                        //какие операции методы доступа по каким маршрутом дозволены без авторизации
+                        //  '/*' - регламентирует один уровень вложенности: /users
+                        // '/**' - регламентирует все уровни вложенности: /users/delete/{id}
+                        //Если подключим зависимость springframework.security
+                        //и не настроим цепочку фильтрации,
+                        //то все запросы будут возвращать 401
+                        //Если подключим зависимость springframework.security.web
+                        //и не настроим цепочку фильтрации,
+                        //то все запросы будут возвращать 403
                         .requestMatchers(HttpMethod.GET,"/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/**").permitAll()
-                        //.requestMatchers(HttpMethod.GET,"/users/**").permitAll()
-                        //.requestMatchers(HttpMethod.POST,"/users/token").permitAll()
-                        //.requestMatchers(HttpMethod.GET,"/users/token").permitAll()
-                        //.requestMatchers(HttpMethod.GET,"/**").permitAll()
-                        /* .requestMatchers(HttpMethod.POST,"/login").permitAll()
-                         .requestMatchers(HttpMethod.POST,"/users/create").permitAll()
-                         .requestMatchers(HttpMethod.GET,"/users/mail/*").permitAll()
-                         .requestMatchers(HttpMethod.GET,"/users/*").permitAll()
-                         .requestMatchers(HttpMethod.POST,"/users/*").permitAll()
-                         .requestMatchers(HttpMethod.POST,"/users/**").permitAll()
-                         .requestMatchers("/account").hasRole(adminRole)
-                         .requestMatchers("/delete**").hasRole(adminRole)
-                         .requestMatchers("/mail**").hasRole(adminRole)*/
+                        .requestMatchers(HttpMethod.DELETE,"/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT,"/**").permitAll()
                         .anyRequest().authenticated()
                 )
+
+                //httpBasic - тип аутенфикации. В данном случае у нас Basic Auth
                 .httpBasic(withDefaults())
-                .addFilter(new AuthenticationFilter(customAuthenticationManager, new JwtTokenProvider(), userRepository, tokenRepository))
+                .addFilter(new AuthenticationFilter(
+
+                        //Далее у нас идёт CustomAuthenticationManager -
+                        //Если мы его не переопределим, то по умолчанию будет вызываться
+                        // стандартный AuthenticationManager
+                        // который возвращает ответ, что наш юзер не валиден
+                        customAuthenticationManager,
+
+                        //Ну тут, я думаю, всё и так понятно
+                        //Генерирует клаймы, токены и проверяет валидность
+                        new JwtTokenProvider(), userRepository, tokenRepository))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
+        // в таком виде позволяет пользоваться Postman
+        // и вобще отправлять запросы
+        // Вместо http.build() так же можно использовать 'http.formLogin(withDefaults()).build();'
+        // Эта команда будет отрисовывать встроенную форму html с полями Login Password
         return http.build();
     }
 

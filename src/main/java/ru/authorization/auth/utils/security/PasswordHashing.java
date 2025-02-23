@@ -6,7 +6,7 @@ import ru.authorization.auth.utils.StaticResources;
 
 public class PasswordHashing {
 
-    private static String salt = StaticResources.SALT_KEY;
+    private static final String salt = StaticResources.SALT_KEY;
 
     public static String createPasswordHash(String password) {
 
@@ -15,6 +15,7 @@ public class PasswordHashing {
 
     public static boolean checkPasswordHash(String password, String hash) {
 
-        return BCrypt.checkpw(password, hash);
+        var result = BCrypt.checkpw(password, hash);
+        return result;
     }
 }

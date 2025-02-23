@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Component;
 
+import ru.authorization.auth.models.Dtos.UserDto;
 import ru.authorization.auth.models.UserModel;
 import ru.authorization.auth.utils.StaticResources;
 
@@ -50,9 +51,9 @@ public class JwtTokenProvider {
         return getClaimFromToken(token, Claims::getExpiration);
     }
 
-    public boolean validateToken(String token, UserModel userDetails) {
+    public boolean validateToken(String token, UserDto userDto) {
         final String username = getUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return (username.equals(userDto.getEmail()) && !isTokenExpired(token));
     }
 
     public Claims validateAndExtractClaims(String token) {

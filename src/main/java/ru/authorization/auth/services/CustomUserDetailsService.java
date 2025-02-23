@@ -6,6 +6,12 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ru.authorization.auth.repositories.UserRepository;
 
+
+//И реализацию этой хренотени надо написать
+//Переопределить UserDetaiilsService
+//Записать свою логику реализации
+//Хотя, вот сейчас пишу эти строки
+//и понямаю, что можно было
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 

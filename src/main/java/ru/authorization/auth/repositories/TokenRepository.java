@@ -14,5 +14,5 @@ public interface TokenRepository extends CrudRepository<TokenArchive, Long> {
 
     @Modifying
     @Query("DELETE FROM TokenArchive t WHERE t.token = ?1")
-    public TokenArchive deleteByToken(String _token);
+    public Boolean deleteByToken(String _token);
 }

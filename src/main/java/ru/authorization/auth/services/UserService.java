@@ -1,55 +1,66 @@
 package ru.authorization.auth.services;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+
+import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.authorization.auth.models.UserModel;
 import ru.authorization.auth.models.Dtos.UserDto;
 import ru.authorization.auth.utils.StaticResources;
 import ru.authorization.auth.repositories.UserRepository;
+import ru.authorization.auth.utils.mapper.UserMapper;
 import ru.authorization.auth.utils.security.PasswordHashing;
 import ru.authorization.auth.utils.exceptions.UserNotFoundException;
 import ru.authorization.auth.utils.exceptions.EmailAlreadyBusyException;
 import ru.authorization.auth.utils.exceptions.DatabaseTransactionException;
 
+@Slf4j
 @Service
-public class UserService {
+@Transactional
+@RequiredArgsConstructor
+//Надо, ё-моё, спрингСекуритям имплементировать чёртов UserDetailsService..
+//и пофиг, что у меня есть поиск по емайлу
+//НЕТ, ему нужен поиск по юзернейму
+//и именно из UserDetailsService
+//и именно переопределить его чёртов метод
+public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    public UserDto create(UserModel user) {
 
-    @Transactional
-    public Boolean create(UserModel user) {
-        try {
-            Optional<UserModel> userOptional = userRepository.findByEmail(user.getEmail());
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new EmailAlreadyBusyException(StaticResources.EMAIL_IS_ALREADY_IN_USE_EXCEPTION_MESSAGE);
+        }
+        String hashedPassword = PasswordHashing.createPasswordHash(user.getPassword());
+        user.setUsername(user.getEmail());
+        user.setPassword(hashedPassword);
 
-            if (userOptional.isPresent()) {
-                throw new EmailAlreadyBusyException(StaticResources.EMAIL_IS_ALREADY_IN_USE_EXCEPTION_MESSAGE);
-            }
+        var savedUser = userRepository.save(user);
 
-            String hashedPassword = PasswordHashing.createPasswordHash(user.getPassword());
-            user.setPassword(hashedPassword);
-
-            var savedUser = userRepository.save(user);
-
-            if (savedUser.equals(user)) return true;
-        } catch (Exception e) {
+        if (savedUser.equals(user))
+        {
+            return UserMapper.mapToDto(savedUser);
+        }
+        else {
             throw new DatabaseTransactionException(StaticResources.CANNOT_CREATE_NEW_USER_EXCEPTION_MESSAGE);
         }
-        return false;
     }
 
-    public List<UserDto> getAll() {
+    public Collection<UserDto> getAll() {
 
         var users = userRepository.findAll();
-
-        return users.stream().map(UserModel::toDto).toList();
+        return users.stream().map(UserMapper::mapToDto).toList();
     }
 
     public UserModel getByEmail(String email) {
@@ -70,11 +81,10 @@ public class UserService {
         var userOptional = userRepository.findById(id);
 
         if(userOptional.isPresent()) {
-            return userOptional.get().toDto();
+            return UserMapper.mapToDto(userOptional.get());
         }
         else {
-            String message = StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE;
-            throw new UserNotFoundException(message);
+            throw new UserNotFoundException(StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE);
         }
     }
 
@@ -119,5 +129,15 @@ public class UserService {
         existingUser.setImage(newImage);
 
         return existingUser;
+    }
+
+    //вот она эта байда, ради которой имплементируем интерфейс
+    //а потом ещё спрингСекурити ругается на модель юзера,
+    //,дескать, и там надо исплементировать интерфейс
+    //с никому нафиг не нужным полем @Override userName
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
+        return userRepository.findByUsername(username).get();
     }
 }

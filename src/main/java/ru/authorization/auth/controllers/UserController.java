@@ -1,5 +1,8 @@
 package ru.authorization.auth.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -9,75 +12,94 @@ import ru.authorization.auth.components.JwtTokenProvider;
 import ru.authorization.auth.models.UserModel;
 import ru.authorization.auth.models.Dtos.UserDto;
 import ru.authorization.auth.services.UserService;
+import ru.authorization.auth.utils.mapper.UserMapper;
 
+import java.util.Collection;
+
+@Tag(name= "User Management Service", description = "API для менеджмента пользователей и аутенфикации")
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
     private final JwtTokenProvider tokenProvider;
 
-    public UserController(UserService userService, JwtTokenProvider tokenProvider) {
-
-        this.userService = userService;
-        this.tokenProvider = tokenProvider;
-    }
-
     @PostMapping("/create")
-    public Boolean register(@RequestBody UserModel user) {
+    @Operation(summary = "Создать нового пользователя", description = "Создаёт нового пользователя")
+    public ResponseEntity<?> register(@RequestBody UserModel user) {
 
-        return userService.create(user);
+        var createdUser = userService.create(user);
+        if (createdUser != null) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось создать пользователя");
     }
 
     @GetMapping
-    public Iterable<UserDto> getAllUsers() {
+    @Operation(summary = "Получить список всех пользователей", description = "возвращает список всех пользователей")
+    public ResponseEntity<Iterable<UserDto>> getAllUsers() {
 
-        return userService.getAll();
+        Collection<UserDto> users = userService.getAll();
+        return new ResponseEntity<>(users, HttpStatus.ACCEPTED);
     }
 
     @GetMapping("/mail/{email}")
+    @Operation(summary = "Получить пользователя по email", description = "возвращает пользователя по email")
     public ResponseEntity<?> getUserByEmail(
             @PathVariable String email,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
         String token = authHeader.substring(7);
-        var existingUser = userService.getByEmail(email);
+        var existingUserDto = UserMapper.mapToDto(userService.getByEmail(email));
 
-        if (authHeader.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (existingUserDto != null && isValidToken(token, existingUserDto)) {
+            return ResponseEntity.ok(existingUserDto);
         }
-
-        if (!isValidToken(token, existingUser)) {
+        else {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        if (existingUser != null) {
-            return ResponseEntity.ok(existingUser);
-        }
-        return null;
+
     }
 
     @GetMapping("/{id}")
-    public UserDto getUserById(@PathVariable long id) {
+    @Operation(summary = "Получить пользователя по id", description = "возвращает пользователя по id")
+    public ResponseEntity<?> getUserById(@PathVariable long id) {
 
-        return userService.getById(id);
+        var user = userService.getById(id);
+
+        return new ResponseEntity<>(user, HttpStatus.ACCEPTED);
     }
+
     @PutMapping("/update/{id}")
-    public boolean updateUserById(
+    @Operation(summary = "Обновить данные пользователя по id", description = "Обновляет данные пользователя по id")
+    public ResponseEntity<?> updateUserById(
             @PathVariable long id,
             @RequestBody UserModel user) {
 
-        return userService.updateById(id, user);
+        if (userService.updateById(id, user)) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось обновить пользоватьские данные");
     }
 
     @DeleteMapping("/delete/{id}")
-    public boolean deleteUserById(@PathVariable long id) {
+    @Operation(summary = "Удалить пользователя по id", description = "Удаляет пользователя по id")
+    public ResponseEntity<?> deleteUserById(@PathVariable long id) {
 
-        return userService.deleteById(id);
+        var result = userService.deleteById(id);
+        if (result) {
+            return ResponseEntity.ok().build();
+        }
+        else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось удалить пользователя");
+        }
     }
 
-    private boolean isValidToken(String token, UserModel user) {
+    @PostMapping("/token/validate")
+    @Operation(summary = "Проверить токен", description = "Проверяет токен")
+    private Boolean isValidToken(String token, UserDto userDto) {
 
-        return tokenProvider.validateToken(token, user);
-         //token.startsWith("Bearer ");
+        return tokenProvider.validateToken(token, userDto);
     }
 }
