@@ -5,13 +5,15 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import ru.authorization.auth.models.UserModel;
+
+import ru.authorization.auth.services.UserService;
 import ru.authorization.auth.services.TokenService;
 import ru.authorization.auth.utils.StaticResources;
 import ru.authorization.auth.components.JwtTokenProvider;
@@ -19,21 +21,26 @@ import ru.authorization.auth.repositories.UserRepository;
 import ru.authorization.auth.repositories.TokenRepository;
 import ru.authorization.auth.components.CustomAuthenticationManager;
 
+@Slf4j
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final TokenService tokenService;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final TokenRepository tokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomAuthenticationManager authenticationManager;
 
-    public AuthenticationFilter(CustomAuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, UserRepository userRepository, TokenRepository tokenRepository) {
+    public AuthenticationFilter(UserService userService,
+                                UserRepository userRepository,
+                                TokenRepository tokenRepository,
+                                JwtTokenProvider jwtTokenProvider,
+                                CustomAuthenticationManager authenticationManager ) {
 
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.tokenRepository = tokenRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
-        this.tokenService = new TokenService(tokenRepository, jwtTokenProvider, userRepository);
+        this.tokenService = new TokenService(userRepository, jwtTokenProvider, tokenRepository);
 
         setAuthenticationManager(authenticationManager);
 
@@ -42,6 +49,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         //сразу при подключении springframework.security
         //по этому аннотацию @RequiredArgConstructor не применяю
         setFilterProcessesUrl("/login");
+        log.info("Конструктор класса AuthenticationFilter");
     }
 
     // Если не переопределить этот метод,
@@ -61,9 +69,11 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(enteredPassword, user);
 
+            log.info("Пользователь " + login + " попытка аутенфикации");
             return authenticationManager.authenticate(authenticationToken);
         }
         else {
+            log.info("Не удалось получить Basic Authorization header");
             throw new IllegalArgumentException("Basic Authorization header is missing");
         }
     }
@@ -76,19 +86,23 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         var result = credentials.split(":", 2);
 
         if (result[0] == null || result[1] == null) {
+            log.info("Не удалось получить Basic Authorization header");
             throw new IllegalArgumentException(StaticResources.USERNAME_OR_PASSWORD_IS_NULL_EXCEPTION_MESSAGE);
         }
+        log.info("Пользователь " + result[0] + " получаем пароль и логин");
         return credentials.split(":", 2);
     }
 
     private UserModel tryToGetUser(String userName) {
 
-        var userOptional = userRepository.findByUsername(userName);
+        var user = userService.loadUserByUsername(userName);
 
-        if (userOptional.isPresent()) {
-            return userOptional.get();
+        if (user != null) {
+            log.info("Пользователь " + userName + " найден");
+            return (UserModel)user;
         }
         else {
+            log.info("Пользователь " + userName + " не найден");
             throw new IllegalArgumentException(StaticResources.INVALID_USERNAME_OR_PASSWORD_EXCEPTION_MESSAGE);
         }
     }
@@ -106,6 +120,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
         var tokenSaving = tokenService.saveToken(token, user.getId(), user.getEmail());
 
+        log.info("Пользователь " + user.getUsername() + " успешно аутенфицирован Отправляю токен: \n" + token);
         response.addHeader("Authorization", "Bearer " + token);
         response.getWriter().write("Authentication successful. Token: " + token);
     }

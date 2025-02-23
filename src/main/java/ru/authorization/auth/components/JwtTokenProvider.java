@@ -4,6 +4,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import ru.authorization.auth.models.Dtos.UserDto;
@@ -15,10 +16,12 @@ import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
 
+@Slf4j
 @Component
 public class JwtTokenProvider {
 
     public String getToken(UserModel userDetails) {
+        log.info("Generating JWT token for user: {}", userDetails.getEmail());
         return Jwts.builder()
                 .setSubject(userDetails.getEmail())
                 .claim("roles", userDetails.getUserStatus().toString())
@@ -33,26 +36,31 @@ public class JwtTokenProvider {
     }
 
     public String getUsernameFromToken(String token) {
+        log.info("Getting username from token");
         return getClaimFromToken(token, Claims::getSubject);
     }
 
     public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
 
         final Claims claims = validateAndExtractClaims(token);
+        log.info("Getting claims from token");
         return claimsResolver.apply(claims);
     }
 
     public boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
+        log.info("Checking if token is expired");
         return expiration.before(new Date());
     }
 
     public Date getExpirationDateFromToken(String token) {
+        log.info("Getting expiration date from token");
         return getClaimFromToken(token, Claims::getExpiration);
     }
 
     public boolean validateToken(String token, UserDto userDto) {
         final String username = getUsernameFromToken(token);
+        log.info("Validating token");
         return (username.equals(userDto.getEmail()) && !isTokenExpired(token));
     }
 
@@ -61,12 +69,14 @@ public class JwtTokenProvider {
         Key key = Keys.hmacShaKeyFor(StaticResources.JWT_SECRET.getBytes(StandardCharsets.UTF_8));
 
         try {
+            log.info("Validating token");
             return Jwts.parser()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
         } catch (Exception e) {
+            log.error("Token is not valid. Invalid JWT signature: {}", e.getMessage());
             throw new IllegalArgumentException("Invalid JWT signature");
         }
     }

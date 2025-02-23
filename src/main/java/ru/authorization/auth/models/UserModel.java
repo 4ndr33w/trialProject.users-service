@@ -11,7 +11,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import ru.authorization.auth.models.enums.UserStatus;
-import ru.authorization.auth.models.Dtos.UserDto;
 
 @Getter
 @Setter
@@ -71,5 +70,21 @@ public class UserModel implements UserDetails {
     @Override
     public String getUsername() {
         return email;
+    }
+    @Override
+    public String toString() {
+        return "UserModel{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", phone='" + phone + '\'' +
+                ", created=" + created +
+                ", updated=" + updated +
+                ", image=" + image +
+                ", lastLoginDate=" + lastLoginDate +
+                ", userStatus=" + userStatus +
+                '}';
     }
 }

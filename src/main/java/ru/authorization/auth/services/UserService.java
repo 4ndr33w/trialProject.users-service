@@ -40,19 +40,22 @@ public class UserService implements UserDetailsService {
     public UserDto create(UserModel user) {
 
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+
+            log.info("Пользователь email: {} уже существует", user.getEmail());
             throw new EmailAlreadyBusyException(StaticResources.EMAIL_IS_ALREADY_IN_USE_EXCEPTION_MESSAGE);
         }
         String hashedPassword = PasswordHashing.createPasswordHash(user.getPassword());
         user.setUsername(user.getEmail());
         user.setPassword(hashedPassword);
-
         var savedUser = userRepository.save(user);
 
         if (savedUser.equals(user))
         {
+            log.info("Пользователь email:  {} успешно создан", user.getEmail());
             return UserMapper.mapToDto(savedUser);
         }
         else {
+            log.info("Пользователь email: {} не создан. Ошибка при сохранении: \n %s", user.getEmail(), StaticResources.CANNOT_CREATE_NEW_USER_EXCEPTION_MESSAGE);
             throw new DatabaseTransactionException(StaticResources.CANNOT_CREATE_NEW_USER_EXCEPTION_MESSAGE);
         }
     }
@@ -60,6 +63,7 @@ public class UserService implements UserDetailsService {
     public Collection<UserDto> getAll() {
 
         var users = userRepository.findAll();
+        log.info("Все пользователи загружены");
         return users.stream().map(UserMapper::mapToDto).toList();
     }
 
@@ -68,10 +72,12 @@ public class UserService implements UserDetailsService {
         var userOptional = userRepository.findByEmail(email);
 
         if(userOptional.isPresent()) {
+            log.info("Пользователь email: {} найден", email);
             return userOptional.get();
         }
         else {
             String message = StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE;
+            log.info("Пользователь email: {} не найден", email);
             throw new UserNotFoundException(message);
         }
     }
@@ -81,22 +87,27 @@ public class UserService implements UserDetailsService {
         var userOptional = userRepository.findById(id);
 
         if(userOptional.isPresent()) {
+            log.info("Пользователь id: {} найден", id);
             return UserMapper.mapToDto(userOptional.get());
         }
         else {
+            log.info("Пользователь id: {} не найден", id);
             throw new UserNotFoundException(StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE);
         }
     }
 
     @Transactional
     public Boolean deleteById(long id) {
+
         var userOptional = userRepository.findById(id);
 
         if (userOptional.isPresent()) {
+            log.info("Пользователь id: {} удалён", id);
             userRepository.delete(userOptional.get());
             return true;
         } else {
             String message = StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE;
+            log.info("Пользователь id: {} не найден", id);
             throw new UserNotFoundException(message);
         }
     }
@@ -107,13 +118,15 @@ public class UserService implements UserDetailsService {
         var existingUserOptional = userRepository.findById(id);
 
         if (existingUserOptional.isPresent()) {
-
             var existingUser = existingUserOptional.get();
-
             userRepository.save(updatedUser(existingUser, user.getName(), user.getLastName(), user.getPhone(), user.getImage()));
+            log.info("Пользователь id: {} обновлен", id);
             return true;
         }
-        else throw new UserNotFoundException(StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE);
+        else {
+            log.info("Пользователь id: {} не найден", id);
+            throw new UserNotFoundException(StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE);
+        }
     }
 
     private UserModel updatedUser(UserModel existingUser, String name, String lastName, String phone, byte[] image) {
@@ -128,6 +141,7 @@ public class UserService implements UserDetailsService {
         existingUser.setPhone(newPhone);
         existingUser.setImage(newImage);
 
+        log.info("Поля пользователя id: {}, name: {}, lastName: {}, phone: {}, image: {} обновлены. Ожидает сохранения", existingUser.getId(), newName, newLastName, newPhone, newImage);
         return existingUser;
     }
 
@@ -138,6 +152,13 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        return userRepository.findByUsername(username).get();
+        var userOptional = userRepository.findByUsername(username);
+        if(userOptional.isPresent()) {
+            log.info("Пользователь с email {} найден", username);
+            return userOptional.get();
+        }
+        log.info("Пользователь c email {} не найден", username);
+        throw new UsernameNotFoundException(StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE);
+
     }
 }

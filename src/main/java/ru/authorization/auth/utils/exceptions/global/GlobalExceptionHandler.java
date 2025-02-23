@@ -3,6 +3,7 @@ package ru.authorization.auth.utils.exceptions.global;
 import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import ru.authorization.auth.utils.exceptions.DatabaseTransactionException;
 import ru.authorization.auth.utils.exceptions.EmailAlreadyBusyException;
 import ru.authorization.auth.utils.exceptions.UserNotFoundException;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -48,6 +50,7 @@ public class GlobalExceptionHandler {
         else {
             error.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
+        log.error(error.toString());
         LOGGER.error(exception.getMessage(), exception);
 
         return error;
@@ -55,10 +58,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EmailAlreadyBusyException.class)
     public ResponseEntity<String> handleEmailAlreadyBusyException(EmailAlreadyBusyException e) {
+        log.error(e.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
     @ExceptionHandler(DatabaseTransactionException.class)
     public ResponseEntity<String> handleDatabaseTransactionException(DatabaseTransactionException e) {
+        log.error(e.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 }

@@ -3,6 +3,7 @@ package ru.authorization.auth.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,6 +18,7 @@ import ru.authorization.auth.utils.mapper.UserMapper;
 import java.util.Collection;
 
 @Tag(name= "User Management Service", description = "API для менеджмента пользователей и аутенфикации")
+@Slf4j
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -31,6 +33,7 @@ public class UserController {
 
         var createdUser = userService.create(user);
         if (createdUser != null) {
+            log.info(createdUser.toString());
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось создать пользователя");

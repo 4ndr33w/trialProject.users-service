@@ -1,6 +1,7 @@
 package ru.authorization.auth.configurations;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
@@ -14,21 +15,22 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 
 import ru.authorization.auth.components.CustomAuthenticationManager;
 import ru.authorization.auth.components.JwtTokenProvider;
-import ru.authorization.auth.models.enums.UserStatus;
 import ru.authorization.auth.repositories.TokenRepository;
 import ru.authorization.auth.repositories.UserRepository;
-import ru.authorization.auth.services.CustomUserDetailsService;
+import ru.authorization.auth.services.UserService;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private CustomUserDetailsService customUserDetailsService;
+    private UserService UserService;
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
 
     @Autowired
     private CustomAuthenticationManager customAuthenticationManager;
@@ -36,13 +38,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, CustomAuthenticationManager customAuthenticationManager) throws Exception {
 
-        String adminRole = UserStatus.ADMIN.toString();
-        String userRole = UserStatus.USER.toString();
-
+        log.info("Заходим в: SecurityConfig.filterChain");
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        //Здесь задаются условия фильтрации Ендпойнтов
+                        //Здесь задаются условия фильтрации Эндпойнтов
                         //какие операции методы доступа по каким маршрутом дозволены без авторизации
                         //  '/*' - регламентирует один уровень вложенности: /users
                         // '/**' - регламентирует все уровни вложенности: /users/delete/{id}
@@ -52,6 +52,9 @@ public class SecurityConfig {
                         //Если подключим зависимость springframework.security.web
                         //и не настроим цепочку фильтрации,
                         //то все запросы будут возвращать 403
+
+                        // HTTPMethod можно не указывать - это необязательный параметр
+                        //Так же тут можно задавать доступ по ролям
                         .requestMatchers(HttpMethod.GET,"/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/**").permitAll()
                         .requestMatchers(HttpMethod.DELETE,"/**").permitAll()
@@ -62,27 +65,21 @@ public class SecurityConfig {
                 //httpBasic - тип аутенфикации. В данном случае у нас Basic Auth
                 .httpBasic(withDefaults())
                 .addFilter(new AuthenticationFilter(
-
-                        //Далее у нас идёт CustomAuthenticationManager -
-                        //Если мы его не переопределим, то по умолчанию будет вызываться
-                        // стандартный AuthenticationManager
-                        // который возвращает ответ, что наш юзер не валиден
-                        customAuthenticationManager,
-
-                        //Ну тут, я думаю, всё и так понятно
-                        //Генерирует клаймы, токены и проверяет валидность
-                        new JwtTokenProvider(), userRepository, tokenRepository))
+                            userService,
+                            userRepository,
+                            tokenRepository,
+                            new JwtTokenProvider(),
+                            customAuthenticationManager))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // в таком виде позволяет пользоваться Postman
-        // и вобще отправлять запросы
-        // Вместо http.build() так же можно использовать 'http.formLogin(withDefaults()).build();'
-        // Эта команда будет отрисовывать встроенную форму html с полями Login Password
+        log.info("Выходим из: SecurityConfig.filterChain");
         return http.build();
     }
 
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(customUserDetailsService);
+
+        log.info("Заходим в: SecurityConfig.configure");
+        auth.userDetailsService(UserService);
     }
 }

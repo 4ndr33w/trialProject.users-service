@@ -15,7 +15,6 @@ public class PasswordHashing {
 
     public static boolean checkPasswordHash(String password, String hash) {
 
-        var result = BCrypt.checkpw(password, hash);
-        return result;
+        return BCrypt.checkpw(password, hash);
     }
 }

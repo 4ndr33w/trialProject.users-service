@@ -18,4 +18,18 @@ public class UserDto {
     private String phone;
     private  byte[] image;
     private Date created;
+
+    @Override
+    public String toString() {
+        return "UserDto{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", userStatus=" + userStatus +
+                ", phone='" + phone + '\'' +
+                ", image=" + image +
+                ", created=" + created +
+                '}';
+    }
 }

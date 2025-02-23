@@ -11,4 +11,14 @@ public class ErrorDto {
     private int statusCode;
     private String path;
     private String message;
+
+    @Override
+    public String toString() {
+        return "ErrorDto{" +
+                "timestamp=" + timestamp +
+                ", statusCode=" + statusCode +
+                ", path='" + path + '\'' +
+                ", message='" + message + '\'' +
+                '}';
+    }
 }
