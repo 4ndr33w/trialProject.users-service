@@ -33,7 +33,7 @@ public class UserController {
 
         var createdUser = userService.create(user);
         if (createdUser != null) {
-            log.info(createdUser.toString());
+            log.info("Пользователь создан: {}", createdUser.toString());
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось создать пользователя");
@@ -44,6 +44,7 @@ public class UserController {
     public ResponseEntity<Iterable<UserDto>> getAllUsers() {
 
         Collection<UserDto> users = userService.getAll();
+        log.info("Пользователи получены: {}", users.toString());
         return new ResponseEntity<>(users, HttpStatus.ACCEPTED);
     }
 
@@ -54,15 +55,23 @@ public class UserController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
         String token = authHeader.substring(7);
-        var existingUserDto = UserMapper.mapToDto(userService.getByEmail(email));
+        log.info("-------------------------\nТокен получен: {}\n-------------------------", token);
+        var existingUser = userService.getByEmail(email);
 
-        if (existingUserDto != null && isValidToken(token, existingUserDto)) {
-            return ResponseEntity.ok(existingUserDto);
+        if (authHeader.isEmpty()) {
+            log.info("-------------------------\nЗаголовок авторизации пустой\n-------------------------");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        else {
+
+        if (!isValidToken(token, UserMapper.mapToDto(existingUser))) {
+            log.info("-------------------------\nПользователь {}- токен инвалид\n-------------------------", email);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
+        if (existingUser != null) {
+            log.info("-------------------------\nВозвращаем юзера: {}\n-------------------------", existingUser.getEmail());
+            return ResponseEntity.ok(existingUser);
+        }
+        return null;
     }
 
     @GetMapping("/{id}")
@@ -71,6 +80,7 @@ public class UserController {
 
         var user = userService.getById(id);
 
+        log.info("Пользователь получен: {}", user.getEmail());
         return new ResponseEntity<>(user, HttpStatus.ACCEPTED);
     }
 
@@ -81,8 +91,10 @@ public class UserController {
             @RequestBody UserModel user) {
 
         if (userService.updateById(id, user)) {
+            log.info("Пользователь обновлен: {}", user.getEmail());
             return ResponseEntity.ok().build();
         }
+        log.info("Пользователь {} не обновлен", user.getEmail());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось обновить пользоватьские данные");
     }
 
@@ -92,17 +104,20 @@ public class UserController {
 
         var result = userService.deleteById(id);
         if (result) {
+            log.info("Пользователь удален: {}", id);
             return ResponseEntity.ok().build();
         }
         else {
+            log.info("Пользователь {} не удален", id);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось удалить пользователя");
         }
     }
 
-    @PostMapping("/token/validate")
+    @PostMapping("/token/validate/{token}")
     @Operation(summary = "Проверить токен", description = "Проверяет токен")
-    private Boolean isValidToken(String token, UserDto userDto) {
+    private Boolean isValidToken(@RequestParam String token, @RequestBody UserDto userDto) {
 
+        log.info("Проверка валидации токена: {}", token);
         return tokenProvider.validateToken(token, userDto);
     }
 }

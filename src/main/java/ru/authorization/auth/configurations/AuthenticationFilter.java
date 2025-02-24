@@ -26,6 +26,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final TokenService tokenService;
     private final UserService userService;
+    private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomAuthenticationManager authenticationManager;
@@ -36,31 +37,33 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                                 JwtTokenProvider jwtTokenProvider,
                                 CustomAuthenticationManager authenticationManager ) {
 
+        log.info("-------------------------\nЗаходим в конструктор класса AuthenticationFilter\n-------------------------");
         this.userService = userService;
+        this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
         this.tokenService = new TokenService(userRepository, jwtTokenProvider, tokenRepository);
 
+        log.info("-------------------------\nAuthenticationFilter\nВнутри конструктора - Инициализируем authenticationManager\n-------------------------");
         setAuthenticationManager(authenticationManager);
 
         //точка входа, с которой перехватываются запросы на авторизацию
         //вызывается спрингом без нашего участия / желания / согласия
         //сразу при подключении springframework.security
         //по этому аннотацию @RequiredArgConstructor не применяю
+        log.info("-------------------------\nзадаём перехватывать запросы в  /login\n-------------------------");
         setFilterProcessesUrl("/login");
-        log.info("Конструктор класса AuthenticationFilter");
+        log.info("-------------------------\nВыхожим из конструктора класса AuthenticationFilter\n-------------------------");
     }
 
-    // Если не переопределить этот метод,
-    // то будет вызываться метод attemptAuthentication() из класса UsernamePasswordAuthenticationFilter
-    // который нам запорет всю аутенфикацию
     @Override
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res) throws AuthenticationException {
         String authorizationHeader = req.getHeader("Authorization");
 
+        log.info("-------------------------\nAuthenticationFilter.attemptAuthentication\nВход в метод attemptAuthentication\n-------------------------");
         if(authorizationHeader != null && authorizationHeader.startsWith("Basic ")) {
-
+            log.info("-------------------------\nAuthenticationFilter.attemptAuthentication\nЗаголовок авторизации начинается с Basic\n-------------------------");
             var usernamePassword = getUsernamePasswordFromRequest(req);
             String login = usernamePassword[0];
             String enteredPassword = usernamePassword[1];
@@ -69,11 +72,11 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(enteredPassword, user);
 
-            log.info("Пользователь " + login + " попытка аутенфикации");
+            log.info("-------------------------\nAuthenticationFilter.attemptAuthentication\nПользователь " + login + " попытка аутенфикации\n-------------------------");
             return authenticationManager.authenticate(authenticationToken);
         }
         else {
-            log.info("Не удалось получить Basic Authorization header");
+            log.info("-------------------------\nAuthenticationFilter.attemptAuthentication\nНе удалось получить Basic Authorization header\n-------------------------");
             throw new IllegalArgumentException("Basic Authorization header is missing");
         }
     }
@@ -86,10 +89,10 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         var result = credentials.split(":", 2);
 
         if (result[0] == null || result[1] == null) {
-            log.info("Не удалось получить Basic Authorization header");
+            log.info("-------------------------\nAuthenticationFilter.getUsernamePasswordFromRequest\nНе удалось получить Basic Authorization header\n-------------------------");
             throw new IllegalArgumentException(StaticResources.USERNAME_OR_PASSWORD_IS_NULL_EXCEPTION_MESSAGE);
         }
-        log.info("Пользователь " + result[0] + " получаем пароль и логин");
+        log.info("-------------------------\nAuthenticationFilter.getUsernamePasswordFromRequest\nПользователь " + result[0] + " получаем пароль и логин\n-------------------------");
         return credentials.split(":", 2);
     }
 
@@ -98,11 +101,11 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         var user = userService.loadUserByUsername(userName);
 
         if (user != null) {
-            log.info("Пользователь " + userName + " найден");
+            log.info("-------------------------\nAuthenticationFilter.tryToGetUser\nПользователь " + userName + " найден\n-------------------------");
             return (UserModel)user;
         }
         else {
-            log.info("Пользователь " + userName + " не найден");
+            log.info("-------------------------\nAuthenticationFilter.tryToGetUser\nПользователь " + userName + " не найден\n-------------------------");
             throw new IllegalArgumentException(StaticResources.INVALID_USERNAME_OR_PASSWORD_EXCEPTION_MESSAGE);
         }
     }
@@ -120,7 +123,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
         var tokenSaving = tokenService.saveToken(token, user.getId(), user.getEmail());
 
-        log.info("Пользователь " + user.getUsername() + " успешно аутенфицирован Отправляю токен: \n" + token);
+        log.info("-------------------------\nAuthenticationFilter.successfulAuthentication\nПользователь " + user.getUsername() + " успешно аутенфицирован Отправляю токен: \n" + token + "\n-------------------------");
         response.addHeader("Authorization", "Bearer " + token);
         response.getWriter().write("Authentication successful. Token: " + token);
     }

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,6 +19,7 @@ import ru.authorization.auth.components.JwtTokenProvider;
 import ru.authorization.auth.repositories.TokenRepository;
 import ru.authorization.auth.repositories.UserRepository;
 import ru.authorization.auth.services.UserService;
+import ru.authorization.auth.utils.security.PasswordHashing;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -38,7 +40,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, CustomAuthenticationManager customAuthenticationManager) throws Exception {
 
-        log.info("Заходим в: SecurityConfig.filterChain");
+        log.info("-------------------------\nЗаходим в: SecurityConfig.filterChain\n-------------------------");
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
@@ -73,13 +75,30 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        log.info("Выходим из: SecurityConfig.filterChain");
+        log.info("-------------------------\nВыходим из: SecurityConfig.filterChain\nНастроена фильтрация доступа\n-------------------------");
         return http.build();
     }
 
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 
-        log.info("Заходим в: SecurityConfig.configure");
+        log.info("-------------------------\nЗаходим в: SecurityConfig.configure\nvoid: AuthenticationManagerBuilder запускает метод userDetailsService\nс параметром UserDervice\n-------------------------");
         auth.userDetailsService(UserService);
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new PasswordEncoder() {
+            @Override
+            public String encode(CharSequence rawPassword) {
+                log.info("-------------------------\nfilterChain.encode\nХэшируем пароль\n-------------------------");
+                return PasswordHashing.createPasswordHash((String) rawPassword);
+            }
+
+            @Override
+            public boolean matches(CharSequence rawPassword, String encodedPassword) {
+                log.info("-------------------------\nfilterChain.encode\nПроверяем пароль\n-------------------------");
+                return PasswordHashing.checkPasswordHash((String) rawPassword, encodedPassword);
+            }
+        };
     }
 }
