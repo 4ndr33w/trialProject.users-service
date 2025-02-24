@@ -30,6 +30,10 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     private UserService UserService;
+    //Для разрешения проблем с тестами поменял статические методы на нестатические
+    //и создал локальный объект
+    //имя переменной с больошой буквы, чтоб не было геморроя с переписыванием кода
+    private PasswordHashing PasswordHashing = new PasswordHashing();
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final UserService userService;
@@ -61,6 +65,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/**").permitAll()
                         .requestMatchers(HttpMethod.DELETE,"/**").permitAll()
                         .requestMatchers(HttpMethod.PUT,"/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        //.requestMatchers("/v3/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        //.requestMatchers("/swagger/**").permitAll()
                         .anyRequest().authenticated()
                 )
 

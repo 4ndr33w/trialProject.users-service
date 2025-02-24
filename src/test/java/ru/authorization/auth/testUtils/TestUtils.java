@@ -1,29 +1,31 @@
-package ru.authorization.auth.services;
+package ru.authorization.auth.testUtils;
 
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.Logger;
+import ru.authorization.auth.controllers.UserController;
 import ru.authorization.auth.models.Dtos.UserDto;
 import ru.authorization.auth.models.UserModel;
 import ru.authorization.auth.models.enums.UserStatus;
 import ru.authorization.auth.repositories.UserRepository;
+import ru.authorization.auth.services.UserService;
 import ru.authorization.auth.utils.security.PasswordHashing;
 
 import java.util.Date;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
-public abstract class ServiceTestUtils {
-
-    @Mock protected UserModel actualUser;
+public abstract class TestUtils {
+    @Mock
+    protected UserModel actualUser;
     @Mock protected UserDto expectedUserDto;
     @Mock protected UserRepository userRepository;
-    @InjectMocks protected UserService userService;
+    @InjectMocks
+    protected UserService userService;
     @Mock protected PasswordHashing passwordHashing;
+    @InjectMocks protected UserController userController;
 
     protected UserModel testUser  = new UserModel().builder()
             .email("test@test.ru")

@@ -7,6 +7,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class passwordHashingTests {
 
+    //Для разрешения проблем с тестами поменял статические методы на нестатические
+    //и создал локальный объект
+    //имя переменной с больошой буквы, чтоб не было геморроя с переписыванием кода
+    private PasswordHashing PasswordHashing = new PasswordHashing();
     String password = "123";
     String passwordHash = "$2a$10$bynIPMKX68HSJHkaKAZ.mOx5ANbcXyAOpaT7AaUsHXRFv9prsDG22";
     public passwordHashingTests() {

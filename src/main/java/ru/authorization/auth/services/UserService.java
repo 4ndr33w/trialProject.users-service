@@ -28,14 +28,13 @@ import ru.authorization.auth.utils.exceptions.DatabaseTransactionException;
 @Service
 @Transactional
 @RequiredArgsConstructor
-//Надо, ё-моё, спрингСекуритям имплементировать чёртов UserDetailsService..
-//и пофиг, что у меня есть поиск по емайлу
-//НЕТ, ему нужен поиск по юзернейму
-//и именно из UserDetailsService
-//и именно переопределить его чёртов метод
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    //Для разрешения проблем с тестами поменял статические методы на нестатические
+    //и создал локальный объект
+    //имя переменной с больошой буквы, чтоб не было геморроя с переписыванием кода
+    private PasswordHashing PasswordHashing = new PasswordHashing();
 
     public UserDto create(UserModel user) {
 
@@ -145,10 +144,6 @@ public class UserService implements UserDetailsService {
         return existingUser;
     }
 
-    //вот она эта байда, ради которой имплементируем интерфейс
-    //а потом ещё спрингСекурити ругается на модель юзера,
-    //,дескать, и там надо исплементировать интерфейс
-    //с никому нафиг не нужным полем @Override userName
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 

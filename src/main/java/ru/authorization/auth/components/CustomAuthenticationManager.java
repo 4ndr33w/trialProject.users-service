@@ -16,6 +16,11 @@ import ru.authorization.auth.utils.security.PasswordHashing;
 @Slf4j
 public class CustomAuthenticationManager implements AuthenticationManager {
 
+    //Для разрешения проблем с тестами поменял статические методы на нестатические
+    //и создал локальный объект
+    //имя переменной с больошой буквы, чтоб не было геморроя с переписыванием кода
+    private PasswordHashing PasswordHashing = new PasswordHashing();
+
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 

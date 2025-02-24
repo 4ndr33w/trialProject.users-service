@@ -1,0 +1,261 @@
+openapi: 3.1.0
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+tags:
+- name: User Management Service
+  description: API для менеджмента пользователей и аутенфикации
+paths:
+  /users/update/{id}:
+    put:
+      tags:
+      - User Management Service
+      summary: Обновить данные пользователя по id
+      description: Обновляет данные пользователя по id
+      operationId: updateUserById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserModel"
+        required: true
+      responses:
+        "500":
+          description: Пользователь не обновлен
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorDto"
+        "202":
+          description: Пользователь обновлен
+          content:
+            '*/*':
+              schema:
+                type: object
+  /users/create:
+    post:
+      tags:
+      - User Management Service
+      summary: Создать нового пользователя
+      description: Создаёт нового пользователя
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserModel"
+        required: true
+      responses:
+        "500":
+          description: Internal Server Error
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorDto"
+        "202":
+          description: Пользователь создан
+          content:
+            '*/*':
+              schema:
+                type: object
+        "409":
+          description: Не удалось создать пользователя
+          content:
+            '*/*':
+              schema:
+                type: object
+  /users:
+    get:
+      tags:
+      - User Management Service
+      summary: Получить список всех пользователей
+      description: возвращает список всех пользователей
+      operationId: getAllUsers
+      responses:
+        "500":
+          description: Internal Server Error
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorDto"
+        "200":
+          description: Список пользователей получен
+          content:
+            '*/*':
+              schema:
+                type: object
+  /users/{id}:
+    get:
+      tags:
+      - User Management Service
+      summary: Получить пользователя по id
+      description: возвращает пользователя по id
+      operationId: getUserById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "500":
+          description: Пользователь не найден
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorDto"
+        "202":
+          description: Пользователь найден
+          content:
+            '*/*':
+              schema:
+                type: object
+  /users/mail/{email}:
+    get:
+      tags:
+      - User Management Service
+      summary: Получить пользователя по email
+      description: возвращает пользователя по email
+      operationId: getUserByEmail
+      parameters:
+      - name: email
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "500":
+          description: Internal Server Error
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorDto"
+        "200":
+          description: Пользователь найден
+          content:
+            '*/*':
+              schema:
+                type: object
+        "401":
+          description: Пользователь не авторизован
+          content:
+            '*/*':
+              schema:
+                type: object
+        "403":
+          description: Доступ закрыт
+          content:
+            '*/*':
+              schema:
+                type: object
+  /users/delete/{id}:
+    delete:
+      tags:
+      - User Management Service
+      summary: Удалить пользователя по id
+      description: Удаляет пользователя по id
+      operationId: deleteUserById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "500":
+          description: Пользователь не удалён
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorDto"
+        "202":
+          description: Пользователь удалён
+          content:
+            '*/*':
+              schema:
+                type: object
+components:
+  schemas:
+    ErrorDto:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        statusCode:
+          type: integer
+          format: int32
+        path:
+          type: string
+        message:
+          type: string
+    GrantedAuthority:
+      type: object
+      properties:
+        authority:
+          type: string
+    UserModel:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+        image:
+          type: string
+          format: byte
+        lastLoginDate:
+          type: string
+          format: date-time
+        userStatus:
+          type: string
+          enum:
+          - ADMIN
+          - USER
+          - NONE
+        username:
+          type: string
+        authorities:
+          type: array
+          items:
+            $ref: "#/components/schemas/GrantedAuthority"
+        enabled:
+          type: boolean
+        credentialsNonExpired:
+          type: boolean
+        accountNonExpired:
+          type: boolean
+        accountNonLocked:
+          type: boolean

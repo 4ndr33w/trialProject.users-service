@@ -15,4 +15,6 @@ public class StaticResources {
     public static final String BAD_REQUEST_EXCEPTION_MESSAGE = Configuration.getProperties().getProperty("BAD_REQUEST_EXCEPTION_MESSAGE");
 
     public static final String SALT_KEY = Configuration.getProperties().getProperty("SALT_KEY");
+
+    public static final String API_SERVER_URL = Configuration.getProperties().getProperty("API_SERVER_URL");
 }

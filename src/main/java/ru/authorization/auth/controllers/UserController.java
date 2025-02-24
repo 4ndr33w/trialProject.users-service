@@ -1,6 +1,8 @@
 package ru.authorization.auth.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,10 @@ public class UserController {
 
     @PostMapping("/create")
     @Operation(summary = "Создать нового пользователя", description = "Создаёт нового пользователя")
+    @ApiResponses({
+            @ApiResponse(responseCode = "202", description = "Пользователь создан"),
+            @ApiResponse(responseCode = "409", description = "Не удалось создать пользователя")
+    })
     public ResponseEntity<?> register(@RequestBody UserModel user) {
 
         var createdUser = userService.create(user);
@@ -40,7 +46,9 @@ public class UserController {
     }
 
     @GetMapping
+    @ApiResponse(responseCode = "200", description = "Список пользователей получен")
     @Operation(summary = "Получить список всех пользователей", description = "возвращает список всех пользователей")
+
     public ResponseEntity<Iterable<UserDto>> getAllUsers() {
 
         Collection<UserDto> users = userService.getAll();
@@ -50,6 +58,11 @@ public class UserController {
 
     @GetMapping("/mail/{email}")
     @Operation(summary = "Получить пользователя по email", description = "возвращает пользователя по email")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пользователь найден"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован"),
+            @ApiResponse(responseCode = "403", description = "Доступ закрыт")
+    })
     public ResponseEntity<?> getUserByEmail(
             @PathVariable String email,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -76,6 +89,10 @@ public class UserController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Получить пользователя по id", description = "возвращает пользователя по id")
+    @ApiResponses({
+            @ApiResponse(responseCode = "202", description = "Пользователь найден"),
+            @ApiResponse(responseCode = "500", description = "Пользователь не найден")
+    })
     public ResponseEntity<?> getUserById(@PathVariable long id) {
 
         var user = userService.getById(id);
@@ -86,6 +103,10 @@ public class UserController {
 
     @PutMapping("/update/{id}")
     @Operation(summary = "Обновить данные пользователя по id", description = "Обновляет данные пользователя по id")
+    @ApiResponses({
+            @ApiResponse(responseCode = "202", description = "Пользователь обновлен"),
+            @ApiResponse(responseCode = "500", description = "Пользователь не обновлен")
+    })
     public ResponseEntity<?> updateUserById(
             @PathVariable long id,
             @RequestBody UserModel user) {
@@ -100,6 +121,10 @@ public class UserController {
 
     @DeleteMapping("/delete/{id}")
     @Operation(summary = "Удалить пользователя по id", description = "Удаляет пользователя по id")
+    @ApiResponses({
+            @ApiResponse(responseCode = "202", description = "Пользователь удалён"),
+            @ApiResponse(responseCode = "500", description = "Пользователь не удалён")
+    })
     public ResponseEntity<?> deleteUserById(@PathVariable long id) {
 
         var result = userService.deleteById(id);
@@ -113,9 +138,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/token/validate/{token}")
-    @Operation(summary = "Проверить токен", description = "Проверяет токен")
-    private Boolean isValidToken(@RequestParam String token, @RequestBody UserDto userDto) {
+    private Boolean isValidToken(String token, UserDto userDto) {
 
         log.info("Проверка валидации токена: {}", token);
         return tokenProvider.validateToken(token, userDto);
