@@ -1,14 +1,17 @@
 package ru.authorization.auth.models.Dtos;
 
-import lombok.Data;
-import lombok.Builder;
+import lombok.*;
+
 import java.util.Date;
 
 import ru.authorization.auth.models.UserModel;
 import ru.authorization.auth.models.enums.UserStatus;
 
-@Builder
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+//@RequiredArgsConstructor
 public class UserDto {
     private long id;
     private String name;

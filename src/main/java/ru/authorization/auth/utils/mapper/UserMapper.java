@@ -1,10 +1,12 @@
 package ru.authorization.auth.utils.mapper;
 
+import org.springframework.stereotype.Component;
 import ru.authorization.auth.models.Dtos.UserDto;
 import ru.authorization.auth.models.UserModel;
 
 import java.util.Date;
 
+@Component
 public class UserMapper {
 
     private UserMapper() {}
