@@ -3,6 +3,7 @@ target/
 .mvn/
 .gigaide/
 src/main/resources/application.properties
+api-docs.json
 
 ### IntelliJ IDEA ###
 .idea
