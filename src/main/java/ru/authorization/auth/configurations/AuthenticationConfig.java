@@ -13,7 +13,6 @@ public class AuthenticationConfig {
     @Bean
     public CustomAuthenticationManager customAuthenticationManager() {
 
-        log.info("-------------------------\nAuthenticationConfig.CustomAuthenticationManager bean created\n-------------------------\n");
         return new CustomAuthenticationManager();
     }
 }

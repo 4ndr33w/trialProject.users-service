@@ -41,19 +41,23 @@ public class UserModel implements UserDetails {
     private String phone;
 
     @Column(name = "created", columnDefinition = "timestamptz")
+    @Builder.Default
     private Date created = new Date();
 
     @Column(name = "updated", columnDefinition = "timestamptz")
+    @Builder.Default
     private Date updated = new Date();
 
     @Column(name = "image", columnDefinition = "bytea")
     private byte[] image;
 
     @Column(name = "lastlogindate", columnDefinition = "timestamptz")
+    @Builder.Default
     private Date lastLoginDate = new Date();
 
     @Column(name = "userstatus")
     @Enumerated(EnumType.ORDINAL)
+    @Builder.Default
     private UserStatus userStatus = UserStatus.USER;
 
     @Column(name = "username", columnDefinition = "text")

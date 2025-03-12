@@ -31,9 +31,6 @@ import ru.authorization.auth.utils.exceptions.DatabaseTransactionException;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    //Для разрешения проблем с тестами поменял статические методы на нестатические
-    //и создал локальный объект
-    //имя переменной с больошой буквы, чтоб не было геморроя с переписыванием кода
     private PasswordHashing PasswordHashing = new PasswordHashing();
 
     public UserDto create(UserModel user) {

@@ -5,6 +5,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,6 +25,7 @@ import ru.authorization.auth.repositories.TokenRepository;
 import ru.authorization.auth.components.CustomAuthenticationManager;
 
 @Slf4j
+@RequiredArgsConstructor
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final TokenService tokenService;
@@ -37,7 +41,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                                 JwtTokenProvider jwtTokenProvider,
                                 CustomAuthenticationManager authenticationManager ) {
 
-        log.info("-------------------------\nЗаходим в конструктор класса AuthenticationFilter\n-------------------------");
         this.userService = userService;
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
@@ -45,25 +48,16 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         this.authenticationManager = authenticationManager;
         this.tokenService = new TokenService(userRepository, jwtTokenProvider, tokenRepository);
 
-        log.info("-------------------------\nAuthenticationFilter\nВнутри конструктора - Инициализируем authenticationManager\n-------------------------");
         setAuthenticationManager(authenticationManager);
 
-        //точка входа, с которой перехватываются запросы на авторизацию
-        //вызывается спрингом без нашего участия / желания / согласия
-        //сразу при подключении springframework.security
-        //по этому аннотацию @RequiredArgConstructor не применяю
-        log.info("-------------------------\nзадаём перехватывать запросы в  /login\n-------------------------");
         setFilterProcessesUrl("/login");
-        log.info("-------------------------\nВыхожим из конструктора класса AuthenticationFilter\n-------------------------");
     }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res) throws AuthenticationException {
         String authorizationHeader = req.getHeader("Authorization");
 
-        log.info("-------------------------\nAuthenticationFilter.attemptAuthentication\nВход в метод attemptAuthentication\n-------------------------");
         if(authorizationHeader != null && authorizationHeader.startsWith("Basic ")) {
-            log.info("-------------------------\nAuthenticationFilter.attemptAuthentication\nЗаголовок авторизации начинается с Basic\n-------------------------");
             var usernamePassword = getUsernamePasswordFromRequest(req);
             String login = usernamePassword[0];
             String enteredPassword = usernamePassword[1];
@@ -72,28 +66,28 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(enteredPassword, user);
 
-            log.info("-------------------------\nAuthenticationFilter.attemptAuthentication\nПользователь " + login + " попытка аутенфикации\n-------------------------");
             return authenticationManager.authenticate(authenticationToken);
         }
         else {
-            log.info("-------------------------\nAuthenticationFilter.attemptAuthentication\nНе удалось получить Basic Authorization header\n-------------------------");
             throw new IllegalArgumentException("Basic Authorization header is missing");
         }
     }
 
-    private String[] getUsernamePasswordFromRequest(HttpServletRequest request){
+    public String[] getUsernamePasswordFromRequest(HttpServletRequest request){
 
-        String base64Credentials = request.getHeader("Authorization").substring("Basic ".length());
-        String credentials = new String(java.util.Base64.getDecoder().decode(base64Credentials));
+        try {
+            String base64Credentials = request.getHeader("Authorization").substring("Basic ".length());
+            String credentials = new String(java.util.Base64.getDecoder().decode(base64Credentials));
 
-        var result = credentials.split(":", 2);
+            var result = credentials.split(":", 2);
 
-        if (result[0] == null || result[1] == null) {
-            log.info("-------------------------\nAuthenticationFilter.getUsernamePasswordFromRequest\nНе удалось получить Basic Authorization header\n-------------------------");
-            throw new IllegalArgumentException(StaticResources.USERNAME_OR_PASSWORD_IS_NULL_EXCEPTION_MESSAGE);
+            return credentials.split(":", 2);
         }
-        log.info("-------------------------\nAuthenticationFilter.getUsernamePasswordFromRequest\nПользователь " + result[0] + " получаем пароль и логин\n-------------------------");
-        return credentials.split(":", 2);
+        catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(StaticResources.INVALID_USERNAME_OR_PASSWORD_EXCEPTION_MESSAGE);
+            //return null;
+        }
+
     }
 
     private UserModel tryToGetUser(String userName) {
@@ -101,17 +95,13 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         var user = userService.loadUserByUsername(userName);
 
         if (user != null) {
-            log.info("-------------------------\nAuthenticationFilter.tryToGetUser\nПользователь " + userName + " найден\n-------------------------");
             return (UserModel)user;
         }
         else {
-            log.info("-------------------------\nAuthenticationFilter.tryToGetUser\nПользователь " + userName + " не найден\n-------------------------");
             throw new IllegalArgumentException(StaticResources.INVALID_USERNAME_OR_PASSWORD_EXCEPTION_MESSAGE);
         }
     }
 
-    //Из названия всё ясно
-    //Прописываем свою логику при успешной аутенфикации
     @Override
     public void successfulAuthentication(HttpServletRequest request,
                                          HttpServletResponse response,
@@ -122,8 +112,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         String token = jwtTokenProvider.getToken(user);
 
         var tokenSaving = tokenService.saveToken(token, user.getId(), user.getEmail());
-
-        log.info("-------------------------\nAuthenticationFilter.successfulAuthentication\nПользователь " + user.getUsername() + " успешно аутенфицирован Отправляю токен: \n" + token + "\n-------------------------");
         response.addHeader("Authorization", "Bearer " + token);
         response.getWriter().write("Authentication successful. Token: " + token);
     }

@@ -22,10 +22,8 @@ public abstract class TestUtils {
     protected UserModel actualUser;
     @Mock protected UserDto expectedUserDto;
     @Mock protected UserRepository userRepository;
-    @InjectMocks
-    protected UserService userService;
     @Mock protected PasswordHashing passwordHashing;
-    @InjectMocks protected UserController userController;
+
 
     protected UserModel testUser  = new UserModel().builder()
             .email("test@test.ru")
@@ -34,15 +32,6 @@ public abstract class TestUtils {
             .lastName("test")
             .phone("test")
             .build();
-
-    /*protected UserModel existingUser  = new UserModel().builder()
-            .email("test@test.ru")
-            .password("$2a$10$bynIPMKX68HSJHkaKAZ.mOx5ANbcXyAOpaT7AaUsHXRFv9prsDG22")
-            .name("test")
-            .lastName("test")
-            .phone("test")
-            .build();*/
-
 
     ///////////////////////////////////////////////////////////////////////
     //DTOS
@@ -129,8 +118,8 @@ public abstract class TestUtils {
             .build();
 
 
-    protected List<Object> getTestUsersCollention() {
+    protected List<UserModel> getTestUsersCollention() {
 
-        return  List.of(testUser0, testUser1/*, testUserDto2*/);//, testUserDto2);
+        return  List.of(testUser0, testUser1);
     }
 }

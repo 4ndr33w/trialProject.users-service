@@ -79,6 +79,4 @@ public class TokenService {
         log.info("Юзер по токену не найден. Токен: " + token);
         return null;
     }
-
-
 }

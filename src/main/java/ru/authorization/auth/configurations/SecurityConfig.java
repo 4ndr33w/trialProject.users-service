@@ -14,12 +14,17 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import ru.authorization.auth.components.CustomAuthenticationManager;
 import ru.authorization.auth.components.JwtTokenProvider;
 import ru.authorization.auth.repositories.TokenRepository;
 import ru.authorization.auth.repositories.UserRepository;
 import ru.authorization.auth.services.UserService;
 import ru.authorization.auth.utils.security.PasswordHashing;
+
+import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -43,53 +48,41 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, CustomAuthenticationManager customAuthenticationManager) throws Exception {
-
-        log.info("-------------------------\nЗаходим в: SecurityConfig.filterChain\n-------------------------");
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        //Здесь задаются условия фильтрации Эндпойнтов
-                        //какие операции методы доступа по каким маршрутом дозволены без авторизации
-                        //  '/*' - регламентирует один уровень вложенности: /users
-                        // '/**' - регламентирует все уровни вложенности: /users/delete/{id}
-                        //Если подключим зависимость springframework.security
-                        //и не настроим цепочку фильтрации,
-                        //то все запросы будут возвращать 401
-                        //Если подключим зависимость springframework.security.web
-                        //и не настроим цепочку фильтрации,
-                        //то все запросы будут возвращать 403
+                        .requestMatchers("/users/mail/**").authenticated()
+                        .anyRequest().permitAll()
 
-                        // HTTPMethod можно не указывать - это необязательный параметр
-                        //Так же тут можно задавать доступ по ролям
-                        .requestMatchers(HttpMethod.GET,"/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE,"/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT,"/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        //.requestMatchers("/v3/**").permitAll()
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        //.requestMatchers("/swagger/**").permitAll()
-                        .anyRequest().authenticated()
                 )
-
-                //httpBasic - тип аутенфикации. В данном случае у нас Basic Auth
                 .httpBasic(withDefaults())
                 .addFilter(new AuthenticationFilter(
-                            userService,
-                            userRepository,
-                            tokenRepository,
-                            new JwtTokenProvider(),
-                            customAuthenticationManager))
+                        userService,
+                        userRepository,
+                        tokenRepository,
+                        new JwtTokenProvider(),
+                        customAuthenticationManager))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-        log.info("-------------------------\nВыходим из: SecurityConfig.filterChain\nНастроена фильтрация доступа\n-------------------------");
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 
-        log.info("-------------------------\nЗаходим в: SecurityConfig.configure\nvoid: AuthenticationManagerBuilder запускает метод userDetailsService\nс параметром UserDervice\n-------------------------");
         auth.userDetailsService(UserService);
     }
 
@@ -98,13 +91,11 @@ public class SecurityConfig {
         return new PasswordEncoder() {
             @Override
             public String encode(CharSequence rawPassword) {
-                log.info("-------------------------\nfilterChain.encode\nХэшируем пароль\n-------------------------");
                 return PasswordHashing.createPasswordHash((String) rawPassword);
             }
 
             @Override
             public boolean matches(CharSequence rawPassword, String encodedPassword) {
-                log.info("-------------------------\nfilterChain.encode\nПроверяем пароль\n-------------------------");
                 return PasswordHashing.checkPasswordHash((String) rawPassword, encodedPassword);
             }
         };

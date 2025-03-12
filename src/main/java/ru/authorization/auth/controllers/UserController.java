@@ -68,20 +68,16 @@ public class UserController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
         String token = authHeader.substring(7);
-        log.info("-------------------------\nТокен получен: {}\n-------------------------", token);
         var existingUser = userService.getByEmail(email);
 
         if (authHeader.isEmpty()) {
-            log.info("-------------------------\nЗаголовок авторизации пустой\n-------------------------");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         if (!isValidToken(token, UserMapper.mapToDto(existingUser))) {
-            log.info("-------------------------\nПользователь {}- токен инвалид\n-------------------------", email);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         if (existingUser != null) {
-            log.info("-------------------------\nВозвращаем юзера: {}\n-------------------------", existingUser.getEmail());
             return ResponseEntity.ok(existingUser);
         }
         return null;
