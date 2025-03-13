@@ -107,7 +107,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/users/mail/Andr33w@hotmail.com",
+					"raw": "http://localhost:8081/users/mail/123@123.com",
 					"protocol": "http",
 					"host": [
 						"localhost"
