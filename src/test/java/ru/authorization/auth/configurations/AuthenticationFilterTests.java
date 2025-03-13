@@ -1,12 +1,7 @@
 package ru.authorization.auth.configurations;
 
-import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import jakarta.servlet.http.HttpServletRequest;
-import ru.authorization.auth.utils.StaticResources;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
 //@ExtendWith(MockitoExtension.class)
 public class AuthenticationFilterTests extends ConfigurationTestsUtils {

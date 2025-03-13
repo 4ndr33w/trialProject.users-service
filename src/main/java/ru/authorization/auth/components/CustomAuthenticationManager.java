@@ -2,7 +2,6 @@ package ru.authorization.auth.components;
 
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,10 +12,9 @@ import ru.authorization.auth.models.UserModel;
 import ru.authorization.auth.utils.StaticResources;
 import ru.authorization.auth.utils.security.PasswordHashing;
 
-@Slf4j
 public class CustomAuthenticationManager implements AuthenticationManager {
 
-    private PasswordHashing PasswordHashing = new PasswordHashing();
+    private final PasswordHashing PasswordHashing = new PasswordHashing();
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {

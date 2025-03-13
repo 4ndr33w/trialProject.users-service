@@ -1,16 +1,12 @@
 package ru.authorization.auth.testUtils;
 
-import jakarta.inject.Inject;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.authorization.auth.controllers.UserController;
 import ru.authorization.auth.models.Dtos.UserDto;
 import ru.authorization.auth.models.UserModel;
 import ru.authorization.auth.models.enums.UserStatus;
 import ru.authorization.auth.repositories.UserRepository;
-import ru.authorization.auth.services.UserService;
 import ru.authorization.auth.utils.security.PasswordHashing;
 
 import java.util.Date;

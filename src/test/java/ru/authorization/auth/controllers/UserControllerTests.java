@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import ru.authorization.auth.models.Dtos.UserDto;
 
-import ru.authorization.auth.models.UserModel;
 import ru.authorization.auth.services.UserService;
 import ru.authorization.auth.utils.exceptions.UserNotFoundException;
 import ru.authorization.auth.utils.mapper.UserMapper;
@@ -16,7 +15,6 @@ import ru.authorization.auth.services.UserServiceTests;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -97,9 +95,7 @@ public class UserControllerTests extends UserServiceTests {
 
         when(userService.getById(userId)).thenThrow(new UserNotFoundException("Пользователь не найден"));
 
-        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            userController.getUserById(userId);
-        });
+        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> userController.getUserById(userId));
         assertEquals("Пользователь не найден", exception.getMessage());
         verify(userService, times(1)).getById(userId);
     }

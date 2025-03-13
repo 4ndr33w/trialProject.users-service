@@ -9,7 +9,7 @@ import ru.authorization.auth.models.UserModel;
 @Repository
 public interface UserRepository extends JpaRepository<UserModel, Long> {
 
-    public Optional<UserModel> findByEmail(String email);
+    Optional<UserModel> findByEmail(String email);
 
-    public Optional<UserModel> findByUsername(String email);
+    Optional<UserModel> findByUsername(String email);
 }

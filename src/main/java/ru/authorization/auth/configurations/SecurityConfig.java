@@ -1,17 +1,14 @@
 package ru.authorization.auth.configurations;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 
 import org.springframework.web.cors.CorsConfiguration;
@@ -28,20 +25,21 @@ import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
-@Slf4j
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
-    private UserService UserService;
-    //Для разрешения проблем с тестами поменял статические методы на нестатические
-    //и создал локальный объект
-    //имя переменной с больошой буквы, чтоб не было геморроя с переписыванием кода
-    private PasswordHashing PasswordHashing = new PasswordHashing();
+    private final PasswordHashing PasswordHashing;
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+
+    public SecurityConfig(UserService userService, UserRepository userRepository, TokenRepository tokenRepository){
+        this.userService = userService;
+        this.userRepository = userRepository;
+        this.tokenRepository = tokenRepository;
+        this.PasswordHashing = new PasswordHashing();
+    }
 
     @Autowired
     private CustomAuthenticationManager customAuthenticationManager;
@@ -50,7 +48,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http, CustomAuthenticationManager customAuthenticationManager) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/mail/**").authenticated()
                         .anyRequest().permitAll()
@@ -83,7 +81,7 @@ public class SecurityConfig {
 
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 
-        auth.userDetailsService(UserService);
+        auth.userDetailsService(userService);
     }
 
     @Bean

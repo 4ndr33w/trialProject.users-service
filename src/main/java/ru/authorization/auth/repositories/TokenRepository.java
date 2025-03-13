@@ -10,9 +10,9 @@ import ru.authorization.auth.models.TokenArchive;
 public interface TokenRepository extends CrudRepository<TokenArchive, Long> {
 
     @Query("SELECT t FROM TokenArchive t WHERE t.token = ?1")
-    public TokenArchive findByToken(String _token);
+    TokenArchive findByToken(String _token);
 
     @Modifying
     @Query("DELETE FROM TokenArchive t WHERE t.token = ?1")
-    public Boolean deleteByToken(String _token);
+    Boolean deleteByToken(String _token);
 }

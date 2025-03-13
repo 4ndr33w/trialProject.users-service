@@ -1,7 +1,5 @@
 package ru.authorization.auth.services;
 
-import lombok.extern.slf4j.Slf4j;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import ru.authorization.auth.models.UserModel;
@@ -17,14 +15,18 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class TokenService {
 
     private final UserRepository userRepository;
     private final JwtTokenProvider tokenProvider;
     private final TokenRepository tokenRepository;
+
+    public TokenService(UserRepository userRepository, JwtTokenProvider tokenProvider, TokenRepository tokenRepository) {
+        this.userRepository = userRepository;
+        this.tokenProvider = tokenProvider;
+        this.tokenRepository = tokenRepository;
+    }
 
     public TokenArchive saveToken(String token, long userId, String userEmail) {
 
@@ -37,7 +39,7 @@ public class TokenService {
         tokenArchive.setCreated(new Date());
         tokenArchive.setExpired(expired);
 
-        log.info("TokenService.saveToken: " + token);
+        //log.info("TokenService.saveToken: " + token);
         return tokenRepository.save(tokenArchive);
     }
 
@@ -45,25 +47,21 @@ public class TokenService {
 
         Instant now = Instant.now();
         Instant newInstant = now.plus(StaticResources.JWT_EXPIRATION_MS, ChronoUnit.MILLIS);
-        log.info("TokenService.setExpirationDate: " + newInstant);
+        //log.info("TokenService.setExpirationDate: " + newInstant);
         return Date.from(newInstant);
     }
 
     public TokenArchive findTokenIfExist(String token) {
 
-        var _token = tokenRepository.findByToken(token);
-        if (_token != null) {
-            log.info("TokenService.findTokenIfExist: " + _token);
-            return _token;
-        }
-        log.info("Токен не найден: " + _token);
-        return null;
+        //log.info("TokenService.findTokenIfExist: " + _token);
+        return tokenRepository.findByToken(token);
+        //log.info("Токен не найден: " + _token);
     }
 
     public Boolean delete(String token) {
 
         tokenRepository.deleteByToken(token);
-        log.info("TokenService.delete: " + token);
+        //log.info("TokenService.delete: " + token);
         return true;
     }
 
@@ -73,10 +71,10 @@ public class TokenService {
         var userOptional = userRepository.findByUsername(userName);
         if(userOptional.isPresent()) {
 
-            log.info("TokenService.findUserByToken: " + userOptional.get());
+            //log.info("TokenService.findUserByToken: " + userOptional.get());
             return userRepository.findByUsername(userName).get();
         }
-        log.info("Юзер по токену не найден. Токен: " + token);
+        //log.info("Юзер по токену не найден. Токен: " + token);
         return null;
     }
 }

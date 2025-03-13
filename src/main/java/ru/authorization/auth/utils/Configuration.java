@@ -1,13 +1,10 @@
 package ru.authorization.auth.utils;
 
-import lombok.Getter;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 public class Configuration {
-    @Getter
     private static final Properties properties;
 
     static {
@@ -17,5 +14,9 @@ public class Configuration {
         } catch (IOException e) {
             throw new RuntimeException("Ошибка при загрузке файла констант", e);
         }
+    }
+
+    public static Properties getProperties() {
+        return properties;
     }
 }

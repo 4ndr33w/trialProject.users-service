@@ -4,7 +4,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import ru.authorization.auth.models.Dtos.UserDto;
@@ -16,7 +15,6 @@ import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
 
-@Slf4j
 @Component
 public class JwtTokenProvider {
 

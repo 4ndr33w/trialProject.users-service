@@ -5,10 +5,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -24,14 +20,10 @@ import ru.authorization.auth.repositories.UserRepository;
 import ru.authorization.auth.repositories.TokenRepository;
 import ru.authorization.auth.components.CustomAuthenticationManager;
 
-@Slf4j
-@RequiredArgsConstructor
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final TokenService tokenService;
     private final UserService userService;
-    private final UserRepository userRepository;
-    private final TokenRepository tokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomAuthenticationManager authenticationManager;
 
@@ -42,8 +34,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                                 CustomAuthenticationManager authenticationManager ) {
 
         this.userService = userService;
-        this.userRepository = userRepository;
-        this.tokenRepository = tokenRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
         this.tokenService = new TokenService(userRepository, jwtTokenProvider, tokenRepository);

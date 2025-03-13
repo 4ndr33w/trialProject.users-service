@@ -4,11 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import ru.authorization.auth.components.JwtTokenProvider;
@@ -20,14 +17,17 @@ import ru.authorization.auth.utils.mapper.UserMapper;
 import java.util.Collection;
 
 @Tag(name= "User Management Service", description = "API для менеджмента пользователей и аутенфикации")
-@Slf4j
 @RestController
 @RequestMapping("/users")
-@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
     private final JwtTokenProvider tokenProvider;
+
+    public UserController(UserService userService, JwtTokenProvider tokenProvider) {
+        this.userService = userService;
+        this.tokenProvider = tokenProvider;
+    }
 
     @PostMapping("/create")
     @Operation(summary = "Создать нового пользователя", description = "Создаёт нового пользователя")
@@ -39,7 +39,7 @@ public class UserController {
 
         var createdUser = userService.create(user);
         if (createdUser != null) {
-            log.info("Пользователь создан: {}", createdUser.toString());
+            //log.info("Пользователь создан: {}", createdUser.toString());
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось создать пользователя");
@@ -52,7 +52,7 @@ public class UserController {
     public ResponseEntity<Iterable<UserDto>> getAllUsers() {
 
         Collection<UserDto> users = userService.getAll();
-        log.info("Пользователи получены: {}", users.toString());
+        //log.info("Пользователи получены: {}", users.toString());
         return new ResponseEntity<>(users, HttpStatus.ACCEPTED);
     }
 
@@ -70,17 +70,10 @@ public class UserController {
         String token = authHeader.substring(7);
         var existingUser = userService.getByEmail(email);
 
-        if (authHeader.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
         if (!isValidToken(token, UserMapper.mapToDto(existingUser))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        if (existingUser != null) {
-            return ResponseEntity.ok(existingUser);
-        }
-        return null;
+        return ResponseEntity.ok(existingUser);
     }
 
     @GetMapping("/{id}")
@@ -93,7 +86,7 @@ public class UserController {
 
         var user = userService.getById(id);
 
-        log.info("Пользователь получен: {}", user.getEmail());
+        //log.info("Пользователь получен: {}", user.getEmail());
         return new ResponseEntity<>(user, HttpStatus.ACCEPTED);
     }
 
@@ -108,10 +101,10 @@ public class UserController {
             @RequestBody UserModel user) {
 
         if (userService.updateById(id, user)) {
-            log.info("Пользователь обновлен: {}", user.getEmail());
+            //log.info("Пользователь обновлен: {}", user.getEmail());
             return ResponseEntity.ok().build();
         }
-        log.info("Пользователь {} не обновлен", user.getEmail());
+        //log.info("Пользователь {} не обновлен", user.getEmail());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось обновить пользоватьские данные");
     }
 
@@ -125,18 +118,18 @@ public class UserController {
 
         var result = userService.deleteById(id);
         if (result) {
-            log.info("Пользователь удален: {}", id);
+            //log.info("Пользователь удален: {}", id);
             return ResponseEntity.ok().build();
         }
         else {
-            log.info("Пользователь {} не удален", id);
+            //log.info("Пользователь {} не удален", id);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось удалить пользователя");
         }
     }
 
     private Boolean isValidToken(String token, UserDto userDto) {
 
-        log.info("Проверка валидации токена: {}", token);
+        //log.info("Проверка валидации токена: {}", token);
         return tokenProvider.validateToken(token, userDto);
     }
 }
