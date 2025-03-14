@@ -52,13 +52,21 @@ public class JwtTokenProvider {
     }
 
     public String getUsernameFromToken(String token) {
-        log.info("Getting username from JWT token");
-        return getClaimFromToken(token, Claims::getSubject);
+        if(isTokenExpired(token)) {
+            return null;
+        }
+        return getUsernameFromClaims(token, Claims::getSubject);
     }
 
-    public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
+    public Claims getClaims(String token) {
+        if(!isTokenExpired(token)) {
+            return validateAndExtractClaims(token);
+        }
+        return null;
+    }
+
+    public <T> T getUsernameFromClaims(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = validateAndExtractClaims(token);
-        log.info("Successfully validated token");
         return claimsResolver.apply(claims);
     }
 
@@ -68,9 +76,9 @@ public class JwtTokenProvider {
         return expiration.before(new Date());
     }
 
-    public Date getExpirationDateFromToken(String token) {
+    private Date getExpirationDateFromToken(String token) {
         log.info("Getting expiration date from JWT token");
-        return getClaimFromToken(token, Claims::getExpiration);
+        return getUsernameFromClaims(token, Claims::getExpiration);
     }
 
     public boolean validateToken(String token, UserDto userDto) {
@@ -84,6 +92,7 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         final String username = getUsernameFromToken(token);
+        //final UserStatus userStatus = userDto.getUserStatus();
         if(username == null) {
             return false;
         }
@@ -91,7 +100,7 @@ public class JwtTokenProvider {
         return (!isTokenExpired(token));
     }
 
-    public Claims validateAndExtractClaims(String token) {
+    private Claims validateAndExtractClaims(String token) {
 
         Key key = Keys.hmacShaKeyFor(StaticResources.JWT_SECRET.getBytes(StandardCharsets.UTF_8));
 

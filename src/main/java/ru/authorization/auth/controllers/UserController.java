@@ -1,5 +1,6 @@
 package ru.authorization.auth.controllers;
 
+import io.jsonwebtoken.Claims;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,19 +52,27 @@ public class UserController {
 
     @GetMapping
     @ApiResponse(responseCode = "200", description = "Список пользователей получен")
+    @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
+    @ApiResponse(responseCode = "403", description = "Доступ закрыт")
     @Operation(summary = "Получить список всех пользователей", description = "возвращает список всех пользователей")
 
     public ResponseEntity<Iterable<UserDto>> getAllUsers(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+            @RequestHeader(value = "Authorization", required = true) String authHeader) {
         if(authHeader == null ||!authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         String token = authHeader.substring(7);
-        var users = userService.getAll();
+        var claims = validateTokenAndGetClaims(token);
+        var userStatus = UserStatus.valueOf(claims.get("roles", String.class));
+        String username = claims.get("sub", String.class);
         if (!isValidToken(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        log.info("Пользователи получены: {}", users.toString());
+        if(!userStatus.equals(UserStatus.ADMIN)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        var users = userService.getAll();
+        log.info("{} запросил список всех пользователей", username);
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
@@ -146,14 +155,14 @@ public class UserController {
 
     private Boolean isValidToken(String token, UserDto userDto) {
 
-        System.out.println("Проверка валидации токена");
-        log.info("Проверка валидации токена: {}", token);
         return tokenProvider.validateToken(token, userDto);
     }
     private Boolean isValidToken(String token) {
 
-        System.out.println("Проверка валидации токена");
-        log.info("Проверка валидации токена: {}", token);
         return tokenProvider.validateToken(token);
+    }
+
+    private Claims validateTokenAndGetClaims(String token) {
+        return tokenProvider.getClaims(token);
     }
 }
