@@ -151,6 +151,46 @@ public class UserService implements UserDetailsService {
         return existingUser;
     }
 
+    public UserDto changeUserMail(long id, UserModel user) {
+        var existingUser = userRepository.findById(id);
+        if(existingUser.isPresent()) {
+            existingUser.get().setEmail(user.getEmail());
+            existingUser.get().setUsername(user.getEmail());
+            userRepository.save(existingUser.get());
+            return UserMapper.mapToDto(existingUser.get());
+        }
+        else {
+            log.info("Пользователь id: {} не найден", user.getId());
+            return null;
+        }
+    }
+
+    public UserDto changeUserPassword(long id, UserModel user) {
+        var existingUser = userRepository.findById(id);
+        if(existingUser.isPresent()) {
+            var hashedPassword = PasswordHashing.createPasswordHash(user.getPassword());
+            existingUser.get().setPassword(hashedPassword);
+            userRepository.save(existingUser.get());
+            return UserMapper.mapToDto(existingUser.get());
+        }
+        else {
+            log.info("Пользователь id: {} не найден", user.getId());
+            return null;
+        }
+    }
+    public UserModel changeUserStatus(long id, UserModel user) {
+        var existingUser = userRepository.findById(id);
+        if(existingUser.isPresent()) {
+            existingUser.get().setUserStatus(user.getUserStatus());
+            userRepository.save(existingUser.get());
+            return existingUser.get();
+        }
+        else {
+            log.info("Пользователь id: {} не найден", user.getId());
+            return null;
+        }
+    }
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 

@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -25,9 +24,9 @@ import ru.authorization.auth.utils.AuthorizationUtils;
 import ru.authorization.auth.components.JwtTokenProvider;
 import ru.authorization.auth.utils.exceptions.global.GlobalExceptionHandler;
 
-@Tag(name= "User Management Service", description = "API для менеджмента пользователей и аутенфикации")
+//@Tag(name= "User Management Administration Controller", description = "REST API контроллер администрирования пользовательских данных")
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/v1/admin")
 public class AdminController {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
@@ -41,22 +40,7 @@ public class AdminController {
         authorizationUtils = new AuthorizationUtils(tokenProvider);
     }
 
-    @PostMapping("/create")
-    @Operation(summary = "Создать нового пользователя", description = "Создаёт нового пользователя")
-    @ApiResponses({
-            @ApiResponse(responseCode = "202", description = "Пользователь создан"),
-            @ApiResponse(responseCode = "409", description = "Не удалось создать пользователя")
-    })
-    public ResponseEntity<?> register(@RequestBody UserModel user) {
-
-        var createdUser = userService.create(user);
-        if (createdUser != null) {
-            log.info("Пользователь создан: {}", createdUser.toString());
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось создать пользователя");
-    }
-
+    @Tag(name = "Контроллер администрирования: Get", description = "GET запросы контроллера администрирования")
     @GetMapping
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Список пользователей получен"),
@@ -90,6 +74,7 @@ public class AdminController {
         return ResponseEntity.ok(users);
     }
 
+    @Tag(name = "Контроллер администрирования: Get", description = "GET запросы контроллера администрирования")
     @GetMapping("/mail/{email}")
     @Operation(summary = "Получить пользователя по email", description = "возвращает пользователя по email")
     @ApiResponses({
@@ -123,6 +108,7 @@ public class AdminController {
         return ResponseEntity.ok(existingUser);
     }
 
+    @Tag(name = "Контроллер администрирования: Get", description = "GET запросы контроллера администрирования")
     @GetMapping("/{id}")
     @Operation(summary = "Получить пользователя по id", description = "возвращает пользователя по id")
     @ApiResponses({
@@ -152,7 +138,8 @@ public class AdminController {
         return ResponseEntity.ok(user);
     }
 
-    @PutMapping("/update/{id}")
+    @Tag(name = "Контроллер администрирования")
+    @PutMapping("/{id}")
     @Operation(summary = "Обновить данные пользователя по id", description = "Обновляет данные пользователя по id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Пользователь обновлен"),
@@ -183,7 +170,8 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось обновить пользоватьские данные");
     }
 
-    @DeleteMapping("/delete/{id}")
+    @Tag(name = "Контроллер администрирования")
+    @DeleteMapping("/{id}")
     @Operation(summary = "Удалить пользователя по id", description = "Удаляет пользователя по id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Пользователь удалён"),
@@ -213,5 +201,98 @@ public class AdminController {
             log.info("Пользователь {} не удален", id);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось удалить пользователя");
         }
+    }
+
+    @Tag(name = "Контроллер администрирования: Change", description = "Изменить параметр пользователя")
+    @PutMapping("/change/email/{id}")
+    @Operation(summary = "Изменить почту пользователя по id", description = "Изменяет почту пользователя по id")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пользователь обновлен"),
+            @ApiResponse(responseCode = "400", description = "Не удалось обновить пользователя"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован"),
+            @ApiResponse(responseCode = "403", description = "У пользователя нет прав доступа")
+    })
+    public ResponseEntity<?> updateUserEmail(@PathVariable long id,
+                                               @RequestHeader(value = "Authorization", required = false) String authHeader,
+                                             @RequestBody UserModel userModel) {
+        String token = authHeader.substring(7);
+        var claims = authorizationUtils.validateTokenAndGetClaims(token);
+        String username = authorizationUtils.getUserName(claims);
+
+        if (!authorizationUtils.isValidToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        }
+        if (!authorizationUtils.isAdmin(claims)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        var result = userService.changeUserMail(id, userModel);
+        if (result == null) {
+            log.info("Не удалось поменять почту у пользователя {}", userModel.getEmail());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось удалить пользователя");
+        }
+        log.info("{} поменял почту пользователя {} на {}", username, userModel.getEmail(), result.getEmail());
+        return ResponseEntity.ok(result);
+    }
+
+    @Tag(name = "Контроллер администрирования: Change", description = "Изменить параметр пользователя")
+    @PutMapping("/change/role/{id}")
+    @Operation(summary = "Изменить роль пользователя по id", description = "Изменяет роль пользователя по id")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пользователь обновлен"),
+            @ApiResponse(responseCode = "400", description = "Не удалось обновить пользователя"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован"),
+            @ApiResponse(responseCode = "403", description = "У пользователя нет прав доступа")})
+    public ResponseEntity<?> updateRole(@PathVariable long id,
+                                         @RequestHeader(value = "Authorization", required = false) String authHeader,
+                                         @RequestBody UserModel userModel) {
+        String token = authHeader.substring(7);
+        var claims = authorizationUtils.validateTokenAndGetClaims(token);
+        String username = authorizationUtils.getUserName(claims);
+
+        if (!authorizationUtils.isValidToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (!authorizationUtils.isAdmin(claims)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        var result = userService.changeUserStatus(id, userModel);
+        if (result == null) {
+            log.info("Не удалось поменять роль у пользователя");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось обновить роль пользователя");
+        }
+        log.info("{} поменял роль пользователя {} c {} на {}", username, result.getEmail(), userModel.getUserStatus(), result.getUserStatus());
+        return ResponseEntity.ok(result);
+    }
+
+    @Tag(name = "Контроллер администрирования: Change", description = "Изменить параметр пользователя")
+    @PutMapping("/change/password/{id}")
+    @Operation(summary = "Изменить пароль пользователя по id", description = "Изменяет пароль пользователя по id")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пароль обновлен"),
+            @ApiResponse(responseCode = "400", description = "Не удалось обновить пароль"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован"),
+            @ApiResponse(responseCode = "403", description = "У пользователя нет прав доступа")})
+    public ResponseEntity<?> updateUserPassword(@PathVariable long id,
+                                         @RequestHeader(value = "Authorization", required = false) String authHeader,
+                                                @RequestBody UserModel userModel) {
+        String token = authHeader.substring(7);
+        var claims = authorizationUtils.validateTokenAndGetClaims(token);
+        String username = authorizationUtils.getUserName(claims);
+
+        if (!authorizationUtils.isValidToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (!authorizationUtils.isAdmin(claims)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        var result = userService.changeUserPassword(id, userModel);
+        if (result == null) {
+            log.info("Не удалось поменять пароль у пользователя");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось обновить пароль пользователя");
+
+        }
+        log.info("{} поменял пароль пользователя {} ", username, userModel.getEmail());
+        return ResponseEntity.ok(result);
     }
 }
