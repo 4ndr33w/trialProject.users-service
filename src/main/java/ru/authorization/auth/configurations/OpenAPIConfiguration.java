@@ -42,18 +42,11 @@ public class OpenAPIConfiguration {
                 .in(SecurityScheme.In.HEADER)
                 .description("Bearer Token");
 
-        SecurityScheme basicAuthScheme = new SecurityScheme()
-                .type(SecurityScheme.Type.HTTP)
-                .scheme("basic")
-                .name("Authorization")
-                .description("Basic Authorization")
-                .in(SecurityScheme.In.HEADER);
-
         SecurityRequirement securityRequirement = new SecurityRequirement()
                 .addList("bearerAuth");
 
         Info info = new Info()
-                .title("Системное API для управления сотрудниками")
+                .title("API для управления пользователями сервиса")
                 .version("1.0")
                 .description("Это API предоставляет эндпоинты для управления пользователями сервиса.")
                 .contact(myContact);

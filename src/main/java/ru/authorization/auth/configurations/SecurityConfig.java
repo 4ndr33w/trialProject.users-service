@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import ru.authorization.auth.components.CustomAuthenticationManager;
 import ru.authorization.auth.components.JwtTokenProvider;
+import ru.authorization.auth.configurations.security.TokenAuthenticationFilter;
 import ru.authorization.auth.repositories.TokenRepository;
 import ru.authorization.auth.repositories.UserRepository;
 import ru.authorization.auth.services.UserService;
@@ -58,7 +59,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/users/create").permitAll()
+                        .requestMatchers( HttpMethod.POST, "/api/v1/users").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
@@ -117,4 +118,8 @@ public class SecurityConfig {
             }
         };
     }
+
+    /*protected TokenAuthenticationFilter authenticationFilter(RequestMatcher requestMatcher) {
+        return new TokenAuthenticationFilter(requestMatcher, jwtTokenProvider);
+    }*/
 }

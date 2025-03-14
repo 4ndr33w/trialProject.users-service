@@ -2,6 +2,8 @@ package ru.authorization.auth.services;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
+
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,32 +66,36 @@ public class UserService implements UserDetailsService {
         return users.stream().map(UserMapper::mapToDto).toList();
     }
 
-    public UserModel getByEmail(String email) {
+    public Optional<UserModel> getUserModelByEmail(String email) {
 
         var userOptional = userRepository.findByEmail(email);
 
         if(userOptional.isPresent()) {
             log.info("Пользователь email: {} найден", email);
-            return userOptional.get();
         }
         else {
             String message = StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE;
             log.info("Пользователь email: {} не найден", email);
-            throw new UserNotFoundException(message);
         }
+        return userOptional;
+    }
+    public UserDto getUserDtoByEmail(String email) {
+        var userOptional = getUserModelByEmail(email);
+        return userOptional.map(UserMapper::mapToDto).orElse(null);
     }
 
     public UserDto getById(long id) {
 
         var userOptional = userRepository.findById(id);
 
-        if(userOptional.isPresent()) {
-            log.info("Пользователь id: {} найден", id);
-            return UserMapper.mapToDto(userOptional.get());
+        if(userOptional.isEmpty()) {
+
+            log.info("Пользователь id: {} не найден", id);
+            return null;
         }
         else {
-            log.info("Пользователь id: {} не найден", id);
-            throw new UserNotFoundException(StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE);
+            log.info("Пользователь id: {} найден", id);
+            return UserMapper.mapToDto(userOptional.get());
         }
     }
 
@@ -103,9 +109,8 @@ public class UserService implements UserDetailsService {
             userRepository.delete(userOptional.get());
             return true;
         } else {
-            String message = StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE;
             log.info("Пользователь id: {} не найден", id);
-            throw new UserNotFoundException(message);
+            return false;
         }
     }
 
@@ -121,8 +126,8 @@ public class UserService implements UserDetailsService {
             return true;
         }
         else {
-            log.info("Пользователь id: {} не найден", id);
-            throw new UserNotFoundException(StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE);
+            log.info("Пользователь id: {} не найден, либо не обновлён", id);
+            return false;
         }
     }
 
@@ -140,6 +145,46 @@ public class UserService implements UserDetailsService {
 
         log.info("Поля пользователя id: {}, name: {}, lastName: {}, phone: {}, image: {} обновлены. Ожидает сохранения", existingUser.getId(), newName, newLastName, newPhone, newImage);
         return existingUser;
+    }
+
+    public UserDto changeUserMail(long id, UserModel user) {
+        var existingUser = userRepository.findById(id);
+        if(existingUser.isPresent()) {
+            existingUser.get().setEmail(user.getEmail());
+            existingUser.get().setUsername(user.getEmail());
+            userRepository.save(existingUser.get());
+            return UserMapper.mapToDto(existingUser.get());
+        }
+        else {
+            log.info("Пользователь id: {} не найден", user.getId());
+            return null;
+        }
+    }
+
+    public UserDto changeUserPassword(long id, UserModel user) {
+        var existingUser = userRepository.findById(id);
+        if(existingUser.isPresent()) {
+            var hashedPassword = PasswordHashing.createPasswordHash(user.getPassword());
+            existingUser.get().setPassword(hashedPassword);
+            userRepository.save(existingUser.get());
+            return UserMapper.mapToDto(existingUser.get());
+        }
+        else {
+            log.info("Пользователь id: {} не найден", user.getId());
+            return null;
+        }
+    }
+    public UserModel changeUserStatus(long id, UserModel user) {
+        var existingUser = userRepository.findById(id);
+        if(existingUser.isPresent()) {
+            existingUser.get().setUserStatus(user.getUserStatus());
+            userRepository.save(existingUser.get());
+            return existingUser.get();
+        }
+        else {
+            log.info("Пользователь id: {} не найден", user.getId());
+            return null;
+        }
     }
 
     @Override

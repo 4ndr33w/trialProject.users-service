@@ -107,7 +107,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/users/mail/Andr33w@hotmail.com",
+					"raw": "http://localhost:8081/users/mail/123@321.com",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -116,7 +116,7 @@
 					"path": [
 						"users",
 						"mail",
-						"Andr33w@hotmail.com"
+						"123@321.com"
 					]
 				}
 			},
@@ -233,7 +233,7 @@
 						},
 						{
 							"key": "username",
-							"value": "Andr33w@hotmail.com",
+							"value": "123@321.com",
 							"type": "string"
 						}
 					]

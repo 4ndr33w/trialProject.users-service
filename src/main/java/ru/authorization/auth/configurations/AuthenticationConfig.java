@@ -15,7 +15,6 @@ public class AuthenticationConfig {
     @Bean
     public CustomAuthenticationManager customAuthenticationManager() {
 
-        System.out.println("customAuthenticationManager()");
         log.info("Configuring custom authentication manager");
         return new CustomAuthenticationManager();
     }

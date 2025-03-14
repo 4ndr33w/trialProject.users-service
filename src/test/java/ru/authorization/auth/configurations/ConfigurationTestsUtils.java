@@ -5,7 +5,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.authorization.auth.components.CustomAuthenticationManager;
 import ru.authorization.auth.components.JwtTokenProvider;
-import ru.authorization.auth.controllers.UserController;
+import ru.authorization.auth.controllers.AdminController;
 import ru.authorization.auth.repositories.TokenRepository;
 import ru.authorization.auth.repositories.UserRepository;
 import ru.authorization.auth.services.UserService;
@@ -16,7 +16,7 @@ public abstract class ConfigurationTestsUtils {
 
     @Mock protected UserService userService;
     @Mock protected UserRepository userRepository;
-    @Mock protected UserController userController;
+    @Mock protected AdminController adminController;
     @Mock protected PasswordHashing passwordHashing;
     @Mock protected TokenRepository tokenRepository;
     @Mock protected JwtTokenProvider jwtTokenProvider;

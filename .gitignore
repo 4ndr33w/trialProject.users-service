@@ -3,6 +3,7 @@ target/
 .mvn/
 .gigaide/
 src/main/resources/application.properties
+src/main/resources/settings_fromLeonid.txt
 api-docs.json
 
 ### IntelliJ IDEA ###

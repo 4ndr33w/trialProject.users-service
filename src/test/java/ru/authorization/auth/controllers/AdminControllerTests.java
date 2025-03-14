@@ -19,7 +19,7 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UserControllerTests extends UserServiceTests {
+public class AdminControllerTests extends UserServiceTests {
 /*
     @Mock
     protected UserService userService;

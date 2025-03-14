@@ -1,6 +1,11 @@
 package ru.authorization.auth.configurations;
 
 import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Date;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import ru.authorization.auth.models.Dtos.TokenDto;
 import ru.authorization.auth.models.UserModel;
 
 import ru.authorization.auth.services.UserService;
@@ -59,12 +65,10 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(enteredPassword, user);
 
-            System.out.println("Authentication token created");
             log.info("attemptAuthentication method: Authentication request received!");
             return authenticationManager.authenticate(authenticationToken);
         }
         else {
-            System.out.println("Authentication request is missing");
             log.info("attemptAuthentication method: Authentication request is missing!");
             throw new IllegalArgumentException("Basic Authorization header is missing");
         }
@@ -78,12 +82,10 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
             var result = credentials.split(":", 2);
 
-            System.out.println("Username and password retrieved successfully");
             log.info("getUsernamePasswordFromRequest method: Username and password retrieved successfully!");
             return credentials.split(":", 2);
         }
         catch (IllegalArgumentException e) {
-            System.out.println("Error in getUsernamePasswordFromRequest method: " + e.getMessage());
             log.error("getUsernamePasswordFromRequest method: " + e.getMessage());
             throw new IllegalArgumentException(StaticResources.INVALID_USERNAME_OR_PASSWORD_EXCEPTION_MESSAGE);
         }
@@ -94,12 +96,10 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         var user = userService.loadUserByUsername(userName);
 
         if (user != null) {
-            System.out.println("User found");
             log.info("tryToGetUser method: User found!");
             return (UserModel)user;
         }
         else {
-            System.out.println("User not found");
             log.error("tryToGetUser method: User not found!");
             throw new IllegalArgumentException(StaticResources.INVALID_USERNAME_OR_PASSWORD_EXCEPTION_MESSAGE);
         }
@@ -114,10 +114,20 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         UserModel user = (UserModel) authResult.getPrincipal();
         String token = jwtTokenProvider.getToken(user);
 
-        var tokenSaving = tokenService.saveToken(token, user.getId(), user.getEmail());
+        TokenDto tokenData = new TokenDto();
+        tokenData.setToken(token);
+        tokenData.setUserName(user.getUsername());
+        tokenData.setUserStatus(user.getUserStatus());
+        tokenData.setCreatedAt(new Date());
+
+        StringWriter tokenSerializedData = new StringWriter();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(tokenSerializedData, tokenData);
+
         response.addHeader("Authorization", "Bearer " + token);
-        response.getWriter().write("Authentication successful. Token: " + token);
-        System.out.println("Authentication successful");
+        response.setContentType("application/json");
+
+        response.getWriter().write(tokenSerializedData.toString());
         log.info("successfulAuthentication method: Authentication successful!");
     }
 }

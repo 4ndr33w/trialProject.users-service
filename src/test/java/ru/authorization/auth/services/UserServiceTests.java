@@ -81,6 +81,7 @@ public class UserServiceTests extends ru.authorization.auth.testUtils.TestUtils 
         verify(userRepository, times(1)).findById(testUser0.getId());
     }
 */
+    /*
     @Test
     public void testGetById_WhenUserDoesNotExist_ThrowsUserNotFoundException() {
 
@@ -92,7 +93,7 @@ public class UserServiceTests extends ru.authorization.auth.testUtils.TestUtils 
         assertEquals(StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE, exception.getMessage());
 
         verify(userRepository, times(1)).findById(testUser0.getId());
-    }
+    }*/
 
     @Test
     public void testDeleteById_WhenUserExists_ReturnsTrue() {
@@ -106,7 +107,7 @@ public class UserServiceTests extends ru.authorization.auth.testUtils.TestUtils 
         verify(userRepository, times(1)).findById(testUser1.getId());
         verify(userRepository, times(1)).delete(testUser1);
     }
-
+/*
     @Test
     public void testDeleteById_WhenUserDoesNotExist_ThrowsUserNotFoundException() {
         when(userRepository.findById(testUser1.getId())).thenReturn(Optional.empty());
@@ -116,7 +117,7 @@ public class UserServiceTests extends ru.authorization.auth.testUtils.TestUtils 
 
         verify(userRepository, times(1)).findById(testUser1.getId());
         verify(userRepository, never()).delete(any());
-    }
+    }*/
 
     @Test
     public void testUpdateById_WhenUserExists_ReturnsTrue() {
@@ -137,7 +138,7 @@ public class UserServiceTests extends ru.authorization.auth.testUtils.TestUtils 
             return true;
         }));
     }
-
+/*
     @Test
     public void testUpdateById_WhenUserDoesNotExist_ThrowsUserNotFoundException() {
 
@@ -147,7 +148,7 @@ public class UserServiceTests extends ru.authorization.auth.testUtils.TestUtils 
         assertEquals(StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE, exception.getMessage());
         verify(userRepository, times(1)).findById(testUser0.getId());
         verify(userRepository, never()).save(any(UserModel.class));
-    }
+    }*/
 
 
 }

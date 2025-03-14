@@ -32,12 +32,10 @@ public class CustomAuthenticationManager implements AuthenticationManager {
             var userStatus = user.getUserStatus();
             var authorities = List.of(new SimpleGrantedAuthority(userStatus.toString()));
 
-            System.out.println("Authorities: " + authorities);
             log.info("User " + user.getUsername() + " is authenticated.");
             return new UsernamePasswordAuthenticationToken(user, null, authorities);
         }
         else  {
-            System.out.println("Invalid username or password.");
             log.info("User " + user.getUsername() + " is not authenticated.");
             throw new AuthenticationException(StaticResources.INVALID_USERNAME_OR_PASSWORD_EXCEPTION_MESSAGE) {
             };

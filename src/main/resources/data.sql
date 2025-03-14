@@ -11,11 +11,11 @@ insert into users (name,
 
 values ('Andrew',
         'McFly',
-        '123@123.com',
+        '123@321.com',
         '$2a$10$bynIPMKX68HSJHkaKAZ.mOx5ANbcXyAOpaT7AaUsHXRFv9prsDG22',
         '31-98-00',
         '2025-02-18 18:00:50.446+05',
         '2025-02-18 18:00:50.446+05',
         '2025-02-18 18:00:50.446+05',
         0,
-        'Andr33w@hotmail.com');
+        '123@321.com');
