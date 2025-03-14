@@ -5,6 +5,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -19,9 +21,11 @@ import ru.authorization.auth.components.JwtTokenProvider;
 import ru.authorization.auth.repositories.UserRepository;
 import ru.authorization.auth.repositories.TokenRepository;
 import ru.authorization.auth.components.CustomAuthenticationManager;
+import ru.authorization.auth.utils.exceptions.global.GlobalExceptionHandler;
 
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     private final TokenService tokenService;
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
@@ -37,10 +41,9 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
         this.tokenService = new TokenService(userRepository, jwtTokenProvider, tokenRepository);
-
         setAuthenticationManager(authenticationManager);
-
         setFilterProcessesUrl("/login");
+        log.info("AuthenticationFilter Constructor was called!");
     }
 
     @Override
@@ -56,9 +59,13 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(enteredPassword, user);
 
+            System.out.println("Authentication token created");
+            log.info("attemptAuthentication method: Authentication request received!");
             return authenticationManager.authenticate(authenticationToken);
         }
         else {
+            System.out.println("Authentication request is missing");
+            log.info("attemptAuthentication method: Authentication request is missing!");
             throw new IllegalArgumentException("Basic Authorization header is missing");
         }
     }
@@ -71,13 +78,15 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
             var result = credentials.split(":", 2);
 
+            System.out.println("Username and password retrieved successfully");
+            log.info("getUsernamePasswordFromRequest method: Username and password retrieved successfully!");
             return credentials.split(":", 2);
         }
         catch (IllegalArgumentException e) {
+            System.out.println("Error in getUsernamePasswordFromRequest method: " + e.getMessage());
+            log.error("getUsernamePasswordFromRequest method: " + e.getMessage());
             throw new IllegalArgumentException(StaticResources.INVALID_USERNAME_OR_PASSWORD_EXCEPTION_MESSAGE);
-            //return null;
         }
-
     }
 
     private UserModel tryToGetUser(String userName) {
@@ -85,9 +94,13 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         var user = userService.loadUserByUsername(userName);
 
         if (user != null) {
+            System.out.println("User found");
+            log.info("tryToGetUser method: User found!");
             return (UserModel)user;
         }
         else {
+            System.out.println("User not found");
+            log.error("tryToGetUser method: User not found!");
             throw new IllegalArgumentException(StaticResources.INVALID_USERNAME_OR_PASSWORD_EXCEPTION_MESSAGE);
         }
     }
@@ -104,5 +117,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         var tokenSaving = tokenService.saveToken(token, user.getId(), user.getEmail());
         response.addHeader("Authorization", "Bearer " + token);
         response.getWriter().write("Authentication successful. Token: " + token);
+        System.out.println("Authentication successful");
+        log.info("successfulAuthentication method: Authentication successful!");
     }
 }

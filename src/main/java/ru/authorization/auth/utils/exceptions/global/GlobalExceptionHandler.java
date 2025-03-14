@@ -1,8 +1,8 @@
 package ru.authorization.auth.utils.exceptions.global;
 
 import java.util.Date;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,7 @@ import ru.authorization.auth.utils.exceptions.UserNotFoundException;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    //private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ResponseBody
     @ExceptionHandler(Exception.class)
@@ -35,6 +35,7 @@ public class GlobalExceptionHandler {
 
         if (exception.getMessage().contains("JDBC exception executing SQL"))
         {
+            LOGGER.error(exception.getMessage(), exception);
             error.setMessage(StaticResources.DATABASE_ACCESS_EXCEPTION_MESSAGE);
         }
 
@@ -49,19 +50,19 @@ public class GlobalExceptionHandler {
             error.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
         //log.error(error.toString());
-        //LOGGER.error(exception.getMessage(), exception);
+        LOGGER.error(exception.getMessage(), exception);
 
         return error;
     }
 
     @ExceptionHandler(EmailAlreadyBusyException.class)
     public ResponseEntity<String> handleEmailAlreadyBusyException(EmailAlreadyBusyException e) {
-        //log.error(e.getMessage());
+        LOGGER.error(e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
     @ExceptionHandler(DatabaseTransactionException.class)
     public ResponseEntity<String> handleDatabaseTransactionException(DatabaseTransactionException e) {
-        //log.error(e.getMessage());
+        LOGGER.error(e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 }
