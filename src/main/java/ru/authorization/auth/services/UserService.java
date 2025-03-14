@@ -64,7 +64,7 @@ public class UserService implements UserDetailsService {
         return users.stream().map(UserMapper::mapToDto).toList();
     }
 
-    public UserModel getByEmail(String email) {
+    public UserModel getUserModelByEmail(String email) {
 
         var userOptional = userRepository.findByEmail(email);
 
@@ -78,19 +78,26 @@ public class UserService implements UserDetailsService {
             throw new UserNotFoundException(message);
         }
     }
+    public UserDto getUserDtoByEmail(String email) {
+        return UserMapper.mapToDto(getUserModelByEmail(email));
+    }
 
     public UserDto getById(long id) {
 
         var userOptional = userRepository.findById(id);
 
-        if(userOptional.isPresent()) {
+        if(userOptional.isEmpty()) {
+
+            //String message = StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE;
+            log.info("Пользователь id: {} не найден", id);
+            //throw new UserNotFoundException(message);
+            return null;
+        }
+        else {
             log.info("Пользователь id: {} найден", id);
             return UserMapper.mapToDto(userOptional.get());
         }
-        else {
-            log.info("Пользователь id: {} не найден", id);
-            throw new UserNotFoundException(StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE);
-        }
+
     }
 
     @Transactional
@@ -103,9 +110,10 @@ public class UserService implements UserDetailsService {
             userRepository.delete(userOptional.get());
             return true;
         } else {
-            String message = StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE;
+            //String message = StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE;
             log.info("Пользователь id: {} не найден", id);
-            throw new UserNotFoundException(message);
+            //throw new UserNotFoundException(message);
+            return false;
         }
     }
 
@@ -121,8 +129,9 @@ public class UserService implements UserDetailsService {
             return true;
         }
         else {
-            log.info("Пользователь id: {} не найден", id);
-            throw new UserNotFoundException(StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE);
+            log.info("Пользователь id: {} не найден, либо не обновлён", id);
+            //throw new UserNotFoundException(StaticResources.USER_NOT_FOUND_EXCEPTION_MESSAGE);
+            return false;
         }
     }
 
