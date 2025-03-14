@@ -15,7 +15,7 @@ import ru.authorization.auth.services.UserService;
 import ru.authorization.auth.utils.AuthorizationUtils;
 import ru.authorization.auth.utils.exceptions.global.GlobalExceptionHandler;
 
-@Tag(name= "User Management Controller", description = "REST API контроллер регистрации и авторизации пользователей")
+@Tag(name= "Контроллер пользователей", description = "REST API контроллер регистрации и авторизации пользователей")
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserController {

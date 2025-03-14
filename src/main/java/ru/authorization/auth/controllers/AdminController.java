@@ -108,7 +108,7 @@ public class AdminController {
         return ResponseEntity.ok(existingUser);
     }
 
-    @Tag(name = "Контроллер администрирования: Get", description = "GET запросы контроллера администрирования")
+    @Tag(name = "Контроллер администрирования")
     @GetMapping("/{id}")
     @Operation(summary = "Получить пользователя по id", description = "возвращает пользователя по id")
     @ApiResponses({
