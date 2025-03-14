@@ -1,24 +1,23 @@
 package ru.authorization.auth.controllers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import ru.authorization.auth.components.JwtTokenProvider;
 import ru.authorization.auth.models.UserModel;
 import ru.authorization.auth.models.Dtos.UserDto;
-import ru.authorization.auth.models.enums.UserStatus;
 import ru.authorization.auth.services.UserService;
-import ru.authorization.auth.utils.exceptions.global.GlobalExceptionHandler;
+import ru.authorization.auth.models.enums.UserStatus;
 import ru.authorization.auth.utils.mapper.UserMapper;
-
-import java.util.Collection;
+import ru.authorization.auth.components.JwtTokenProvider;
+import ru.authorization.auth.utils.exceptions.global.GlobalExceptionHandler;
 
 @Tag(name= "User Management Service", description = "API для менеджмента пользователей и аутенфикации")
 @RestController

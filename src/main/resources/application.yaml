@@ -22,6 +22,18 @@ spring:
     #issuer-uri: http://localhost:8081/oauth/token
     ########################################################################
     #name: postgres
+springdoc:
+  swagger-ui:
+    path: /swagger-ui/index.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
+api:
+  server:
+    url: http://localhost:8081/
+    path: /users
 
   jpa:
     hibernate:
