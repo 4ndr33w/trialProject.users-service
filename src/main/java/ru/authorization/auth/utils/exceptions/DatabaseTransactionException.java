@@ -8,6 +8,5 @@ public class DatabaseTransactionException extends RuntimeException {
     public DatabaseTransactionException(String message) {
 
         super(message);
-        //log.error(message);
     }
 }

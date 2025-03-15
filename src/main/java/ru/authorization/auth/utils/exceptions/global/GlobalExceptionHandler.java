@@ -49,7 +49,6 @@ public class GlobalExceptionHandler {
         else {
             error.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
-        //log.error(error.toString());
         LOGGER.error(exception.getMessage(), exception);
 
         return error;

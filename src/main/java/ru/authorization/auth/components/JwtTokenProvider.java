@@ -29,7 +29,7 @@ public class JwtTokenProvider {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     public String getToken(UserModel userDetails) {
-        log.info("Getting token from UserModel");
+
         return Jwts.builder()
                 .setSubject(userDetails.getEmail())
                 .claim("roles", userDetails.getUserStatus().toString())
@@ -92,7 +92,6 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         final String username = getUsernameFromToken(token);
-        //final UserStatus userStatus = userDto.getUserStatus();
         if(username == null) {
             return false;
         }
